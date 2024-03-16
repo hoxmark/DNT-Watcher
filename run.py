@@ -1,4 +1,3 @@
-# %%
 import datetime
 
 from helper import (
@@ -33,7 +32,7 @@ def check_cabin_availability(url):
 
     # Extract the available dates from the result
     available = extract_available_dates(result)
-    print(available)
+
     # Print statistics about the available dates
     print_date_statistics(available)
 
@@ -42,7 +41,8 @@ def check_cabin_availability(url):
 
     # Load the latest files
     last_results = load_latest_files()
-
+    if len(last_results) < 2 or None:
+        return
     # Perform diff on the two lists of results
     new_dates = diff_lists(last_results[0], last_results[1])
 
@@ -55,5 +55,3 @@ if __name__ == "__main__":
     # with this url to fetch availability:
     fuglemyrshytta = "https://visbook.dnt.no/api/6516/availability/100976/"
     check_cabin_availability(fuglemyrshytta)
-
-# %%
