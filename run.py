@@ -1,4 +1,5 @@
 import datetime
+import time
 
 from helper import (
     diff_lists,
@@ -54,4 +55,11 @@ if __name__ == "__main__":
     # The cabin I care the most about is this: https://hyttebestilling.dnt.no/hytte/101209#rooms
     # with this url to fetch availability:
     fuglemyrshytta = "https://visbook.dnt.no/api/6516/availability/100976/"
-    check_cabin_availability(fuglemyrshytta)
+    # check_cabin_availability(fuglemyrshytta)
+
+    interval = 3600  # 1 hour
+    while True:
+        time.sleep(interval)
+        check_cabin_availability(fuglemyrshytta)
+        print("-" * 80)
+        print("")
