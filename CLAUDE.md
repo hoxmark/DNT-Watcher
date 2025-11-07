@@ -58,7 +58,7 @@ DNT-Watcher/
 │       └── src/dnt_toolbar/
 │           ├── __init__.py
 │           └── app.py          # Menu bar application
-└── [legacy files]              # Old single-file structure (deprecated)
+└── .gitignore                  # Excludes .venv, history/, etc.
 ```
 
 ## Package Responsibilities
@@ -176,33 +176,52 @@ The cabin ID is automatically extracted from the URL (the number at the end).
 
 ## Development Commands
 
-### Setup with UV (Required)
+All development uses UV exclusively. No pip or conda commands needed.
+
+### Setup
 
 ```bash
-# Sync all workspace packages and dependencies
+# Initial setup - sync all workspace packages and dependencies
 uv sync
 
+# Install additional dev dependencies if needed
+uv add --dev <package-name>
+```
+
+### Running Applications
+
+```bash
 # Run CLI application once
 uv run dnt-watcher
 
-# Run CLI in continuous mode
-uv run python -c "from dnt_cli.run import run_continuous; run_continuous()"
-
-# Launch toolbar app
+# Launch macOS toolbar app
 uv run dnt-toolbar
 
-# Run tests
+# Run CLI in continuous mode
+uv run python -c "from dnt_cli.run import run_continuous; run_continuous()"
+```
+
+### Testing
+
+```bash
+# Run all tests
 uv run python -m unittest tests/test_core.py -v
-# or
-uv run pytest tests/
+
+# Run with pytest (if preferred)
+uv run pytest tests/ -v
+
+# Test individual packages
+uv run python -c "from dnt_core import load_cabins; print(load_cabins())"
+uv run python -c "from dnt_notification import send_notification; send_notification('Test', 'Works!')"
 ```
 
 ### Development Workflow
 
-1. Make changes to core package (`packages/core/`)
-2. Changes automatically available to CLI and Toolbar (via imports)
-3. Test with: `uv sync && uv run dnt-watcher`
-4. Run tests: `uv run pytest tests/`
+1. Make changes to any package (usually `packages/core/`)
+2. Changes automatically available to CLI and Toolbar (via workspace imports)
+3. Test immediately: `uv run dnt-watcher`
+4. Run tests: `uv run python -m unittest tests/test_core.py -v`
+5. No need to reinstall - UV handles it automatically
 
 ## API Details
 
@@ -342,17 +361,6 @@ uv run python -m unittest tests/test_core.py -v
 4. **Cabin Configuration**: All cabins in `dnt_hytter.yaml` are checked on each run
 5. **Weekend Definition**: Friday-Sunday (3 consecutive days starting on Friday)
 6. **DRY Principle**: Never duplicate business logic - always use imports from `dnt-core`
-
-## Migration from Legacy
-
-The repository contains legacy files from the single-file architecture:
-- `run.py` (old) - Replaced by `packages/cli/src/dnt_cli/run.py`
-- `helper.py` (old) - Split into `packages/core/src/dnt_core/{api,analysis}.py`
-- `config.py` (old) - Moved to `packages/core/src/dnt_core/config.py`
-- `notify.py` (old) - Moved to `packages/notification/src/dnt_notification/notify.py`
-- `test_helper.py` (old) - Replaced by `tests/test_core.py`
-
-These legacy files can be removed once the workspace is fully tested and operational.
 
 ## Common Tasks
 

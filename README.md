@@ -62,22 +62,25 @@ macOS menu bar service:
 
 ## 🚀 Quick Start
 
-### Installation
+### Prerequisites
 
-**Using `uv` (required for workspace):**
+- Python 3.11+
+- [UV package manager](https://docs.astral.sh/uv/) - Install with: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+### Installation
 
 ```bash
 # Clone the repository
 git clone https://github.com/hoxmark/DNT-Watcher.git
 cd DNT-Watcher
 
-# Sync all workspace packages
+# Sync all workspace packages and dependencies
 uv sync
 
-# Run the CLI
+# Run the CLI (single check)
 uv run dnt-watcher
 
-# Or run the macOS toolbar app
+# Or launch the macOS toolbar app (persistent monitoring)
 uv run dnt-toolbar
 ```
 
@@ -146,18 +149,31 @@ The toolbar app provides:
 
 ### Continuous Monitoring
 
-The CLI supports continuous operation:
-```python
-# packages/cli/src/dnt_cli/run.py
-from dnt_cli.run import run_continuous
+**Option 1: Use the Toolbar App (Recommended)**
+```bash
+# Launch the menu bar app - stays running in background
+uv run dnt-toolbar
+```
+Then use "Rerun Check Now" whenever you want to manually check.
 
-run_continuous(interval=3600)  # Check every hour
+**Option 2: Scheduled CLI Checks with Cron**
+```bash
+# Add to crontab: Check every hour
+0 * * * * cd /path/to/DNT-Watcher && uv run dnt-watcher
+
+# Or check only on Saturday mornings (when new bookings often appear)
+0 8 * * 6 cd /path/to/DNT-Watcher && uv run dnt-watcher
 ```
 
-Or set up a cron job:
+**Option 3: Run CLI in Continuous Mode**
 ```bash
-# Run every hour
-0 * * * * cd /path/to/DNT-Watcher && uv run dnt-watcher
+# Create a simple runner script
+cat > run_continuous.py << 'EOF'
+from dnt_cli.run import run_continuous
+run_continuous(interval=3600)  # Check every hour
+EOF
+
+uv run python run_continuous.py
 ```
 
 ## 🎨 Design Principles
@@ -186,15 +202,14 @@ The CLI and Toolbar apps are **thin presentation layers** that:
 
 ## 🧪 Testing
 
-Run workspace tests:
+Run the test suite:
 
 ```bash
-uv run pytest tests/
-```
-
-Or using unittest:
-```bash
+# Run all tests
 uv run python -m unittest tests/test_core.py -v
+
+# Or use pytest if you prefer
+uv run pytest tests/ -v
 ```
 
 **Test coverage:**
@@ -203,6 +218,18 @@ uv run python -m unittest tests/test_core.py -v
 - ✅ Weekend detection (none, partial, complete, multiple)
 - ✅ Configuration loading
 - ✅ Diff comparison logic
+
+**Manual Testing:**
+```bash
+# Test CLI package
+uv run dnt-watcher
+
+# Test notification package
+uv run python -c "from dnt_notification import send_notification; send_notification('Test', 'It works!')"
+
+# Test core package
+uv run python -c "from dnt_core import load_cabins; print(load_cabins())"
+```
 
 ## 🔧 Development
 
@@ -279,10 +306,12 @@ graph TD
 
 ## 🛠 Requirements
 
-- Python 3.11+
-- UV package manager (for workspace)
-- macOS (recommended for full feature set)
-- Dependencies managed via workspace
+- **Python 3.11+** - Required for all packages
+- **[UV package manager](https://docs.astral.sh/uv/)** - Required for workspace management
+- **macOS** - Recommended for full feature set (notifications + toolbar app work best)
+  - Linux/Windows: CLI works, notifications have console fallback, toolbar app unavailable
+
+All package dependencies are automatically managed by UV via the workspace configuration.
 
 ## 📝 API Reference
 
