@@ -35,9 +35,9 @@ class DNTToolbarApp(rumps.App):
         self.menu = [
             "Status",
             rumps.separator,
-            "Rerun Check Now",
+            "🔄 Rerun Check Now",
             rumps.separator,
-            "Quit"
+            "❌ Quit"
         ]
         self.status_item = self.menu["Status"]
         self.update_status_display()
@@ -123,35 +123,96 @@ class DNTToolbarApp(rumps.App):
         """Update the status menu item with current information."""
         status = self.get_latest_status()
 
-        # Build status text
-        status_lines = [
-            f"Last Check: {status['last_check']}",
-            f"Total Available: {status['total_dates']} dates",
-            f"Full Weekends: {status['weekends']}"
-        ]
+        # Format last check time nicely
+        last_check = status['last_check']
+        if last_check not in ["Never", "Error", "Unknown"]:
+            try:
+                # Parse and format as relative time
+                from datetime import datetime
+                check_dt = datetime.strptime(last_check, "%Y-%m-%d %H:%M")
+                now = datetime.now()
+                diff = now - check_dt
 
-        # Add cabin names
+                if diff.days > 0:
+                    time_ago = f"{diff.days}d ago"
+                elif diff.seconds >= 3600:
+                    hours = diff.seconds // 3600
+                    time_ago = f"{hours}h ago"
+                elif diff.seconds >= 60:
+                    minutes = diff.seconds // 60
+                    time_ago = f"{minutes}m ago"
+                else:
+                    time_ago = "just now"
+
+                last_check_display = f"{check_dt.strftime('%H:%M')} ({time_ago})"
+            except:
+                last_check_display = last_check
+        else:
+            last_check_display = last_check
+
+        # Build beautifully formatted status text
+        status_lines = []
+
+        # Header with icon
+        status_lines.append("━━━━━━━━━━━━━━━━━━━━━━━")
+        status_lines.append("🏔  DNT WATCHER STATUS")
+        status_lines.append("━━━━━━━━━━━━━━━━━━━━━━━")
+        status_lines.append("")
+
+        # Last check time
+        status_lines.append(f"🕐 Last Check: {last_check_display}")
+        status_lines.append("")
+
+        # Availability stats with visual indicators
+        if status['weekends'] > 0:
+            weekend_icon = "✅"
+            weekend_text = f"{status['weekends']} AVAILABLE!"
+        else:
+            weekend_icon = "❌"
+            weekend_text = "None found"
+
+        status_lines.append(f"{weekend_icon} Full Weekends: {weekend_text}")
+
+        # Total dates with different icons based on amount
+        if status['total_dates'] > 50:
+            dates_icon = "🎉"
+        elif status['total_dates'] > 0:
+            dates_icon = "📅"
+        else:
+            dates_icon = "⚠️"
+
+        status_lines.append(f"{dates_icon} Total Dates: {status['total_dates']}")
+
+        # Cabin list (more compact)
         if status['cabins']:
             status_lines.append("")
-            status_lines.append("Monitored Cabins:")
-            for cabin in status['cabins']:
-                status_lines.append(f"  • {cabin['navn']}")
+            status_lines.append("━━━━━━━━━━━━━━━━━━━━━━━")
+            status_lines.append(f"📍 Monitoring {len(status['cabins'])} cabin(s):")
+            status_lines.append("")
+            for i, cabin in enumerate(status['cabins'], 1):
+                # Shorten cabin names if too long
+                name = cabin['navn']
+                if len(name) > 20:
+                    name = name[:17] + "..."
+                status_lines.append(f"  {i}. {name}")
 
         self.status_item.title = "\n".join(status_lines)
 
         # Update menu bar icon based on weekend availability
         if status['weekends'] > 0:
-            self.title = "🏔✓"  # Green checkmark when weekends available
+            self.title = "🏔✅"  # Green checkmark when weekends available
+        elif status['total_dates'] > 0:
+            self.title = "🏔📅"  # Calendar when dates available (but no weekends)
         else:
-            self.title = "🏔"
+            self.title = "🏔"  # Just mountain when nothing available
 
-    @rumps.clicked("Rerun Check Now")
+    @rumps.clicked("🔄 Rerun Check Now")
     def rerun_check(self, _):
         """Manually trigger a full availability check."""
         # Show notification that check is starting
         rumps.notification(
-            title="DNT Watcher",
-            subtitle="Starting manual check...",
+            title="🏔 DNT Watcher",
+            subtitle="🔍 Starting manual check...",
             message="This may take a few moments"
         )
 
@@ -162,15 +223,15 @@ class DNTToolbarApp(rumps.App):
                 # Update the display after check completes
                 self.update_status_display()
                 rumps.notification(
-                    title="DNT Watcher",
-                    subtitle="Check complete!",
+                    title="🏔 DNT Watcher",
+                    subtitle="✅ Check complete!",
                     message="Status has been updated"
                 )
             except Exception as e:
                 print(f"Error during check: {e}")
                 rumps.notification(
-                    title="DNT Watcher",
-                    subtitle="Check failed",
+                    title="🏔 DNT Watcher",
+                    subtitle="❌ Check failed",
                     message=str(e)
                 )
 
@@ -230,7 +291,7 @@ class DNTToolbarApp(rumps.App):
                             f"{cabin_name}: {len(added)} new date(s) available"
                         )
 
-    @rumps.clicked("Quit")
+    @rumps.clicked("❌ Quit")
     def quit_app(self, _):
         """Quit the application."""
         rumps.quit_application()
