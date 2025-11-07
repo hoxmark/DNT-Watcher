@@ -26,9 +26,10 @@ venv/
 ENV/
 env/
 
-# uv
+# UV Workspace
 .python-version
 uv.lock
+.venv/
 
 # macOS
 .DS_Store

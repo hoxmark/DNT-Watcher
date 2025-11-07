@@ -1,10 +1,19 @@
 [project]
-name = "dnt-watcher"
-version = "0.1.0"
-description = "A cabin availability checker for DNT cabins"
+name = "dnt-watcher-workspace"
+version = "1.0.0"
+description = "Multi-layered DNT cabin availability monitoring system"
 requires-python = ">=3.11"
-dependencies = [
-    "requests>=2.31.0",
-    "pyyaml>=6.0",
-    "colorama>=0.4.6",
+
+[tool.uv.workspace]
+members = [
+    "packages/core",
+    "packages/notification",
+    "packages/cli",
+    "packages/toolbar-app",
+    "packages/toolbar-qt"
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.0",
 ]

@@ -1,0 +1,10 @@
+[project]
+name = "dnt-notification"
+version = "1.0.0"
+description = "Cross-platform notification system for DNT Watcher"
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

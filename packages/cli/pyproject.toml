@@ -1,0 +1,21 @@
+[project]
+name = "dnt-cli"
+version = "1.0.0"
+description = "Beautiful CLI for DNT cabin availability monitoring"
+requires-python = ">=3.11"
+dependencies = [
+    "dnt-core",
+    "dnt-notification",
+    "colorama>=0.4.6",
+]
+
+[tool.uv.sources]
+dnt-core = { workspace = true }
+dnt-notification = { workspace = true }
+
+[project.scripts]
+dnt-watcher = "dnt_cli.run:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
