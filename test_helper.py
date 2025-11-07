@@ -1,124 +1,55 @@
+"""Tests for DNT Watcher helper functions."""
+
 import datetime
 import unittest
 
-from helper import (
-    extract_available_dates,
-    get_months_from_now_out_this_year,
-    get_months_to_iterate_over,
-)
+from config import extract_cabin_id
+from helper import extract_available_dates, find_available_weekends
+
+
+class TestConfig(unittest.TestCase):
+    """Test configuration helper functions."""
+
+    def test_extract_cabin_id(self):
+        """Test extracting cabin ID from URLs."""
+        # Test case 1: Standard URL
+        url = "https://hyttebestilling.dnt.no/hytte/101297"
+        result = extract_cabin_id(url)
+        self.assertEqual(result, "101297")
+
+        # Test case 2: URL with trailing slash
+        url = "https://hyttebestilling.dnt.no/hytte/101233402/"
+        result = extract_cabin_id(url)
+        self.assertEqual(result, "101233402")
+
+        # Test case 3: Another cabin
+        url = "https://hyttebestilling.dnt.no/hytte/101209"
+        result = extract_cabin_id(url)
+        self.assertEqual(result, "101209")
 
 
 class TestHelper(unittest.TestCase):
-    def test_get_months_to_iterate_over(self):
-        # Test case 1: Starting from January 2022
-        start_date = datetime.datetime(2022, 1, 1)
-        expected_output = [
-            "2022-01",
-            "2022-02",
-            "2022-03",
-            "2022-04",
-            "2022-05",
-            "2022-06",
-            "2022-07",
-            "2022-08",
-            "2022-09",
-            "2022-10",
-        ]
-        result = list(get_months_to_iterate_over(start_date))
-        self.assertEqual(result, expected_output)
+    """Test helper functions for availability checking."""
 
-        # Test case 2: Starting from November 2022
-        start_date = datetime.datetime(2022, 11, 1)
-        expected_output = [
-            "2022-11",
-            "2022-12",
-            "2023-01",
-            "2023-02",
-            "2023-03",
-            "2023-04",
-            "2023-05",
-            "2023-06",
-            "2023-07",
-            "2023-08",
-            "2023-09",
-            "2023-10",
-        ]
-        result = list(get_months_to_iterate_over(start_date))
-        self.assertEqual(result, expected_output)
-
-        # Test case 3: Starting from December 2022
-        start_date = datetime.datetime(2022, 12, 1)
-        expected_output = [
-            "2022-12",
-            "2023-01",
-            "2023-02",
-            "2023-03",
-            "2023-04",
-            "2023-05",
-            "2023-06",
-            "2023-07",
-            "2023-08",
-            "2023-09",
-            "2023-10",
-        ]
-        result = list(get_months_to_iterate_over(start_date))
-        self.assertEqual(result, expected_output)
-
-    def test_get_months_from_now_out_this_year(self):
-        # Test case 1: Starting from January 2022
-        start_date = datetime.datetime(2022, 1, 1)
-        expected_output = [
-            "2022-01",
-            "2022-02",
-            "2022-03",
-            "2022-04",
-            "2022-05",
-            "2022-06",
-            "2022-07",
-            "2022-08",
-            "2022-09",
-            "2022-10",
-            "2022-11",
-            "2022-12",
-        ]
-        result = list(get_months_from_now_out_this_year(start_date))
-        self.assertEqual(result, expected_output)
-
-        # Test case 2: Starting from November 2022
-        start_date = datetime.datetime(2022, 11, 1)
-        expected_output = [
-            "2022-11",
-            "2022-12",
-        ]
-        result = list(get_months_from_now_out_this_year(start_date))
-        self.assertEqual(result, expected_output)
-
-        # Test case 3: Starting from December 2022
-        start_date = datetime.datetime(2022, 12, 1)
-        expected_output = [
-            "2022-12",
-        ]
-        result = list(get_months_from_now_out_this_year(start_date))
-        self.assertEqual(result, expected_output)
-
-    def test_extract_available_dates(self):
-        # Test case 1: Empty availability dictionary
+    def test_extract_available_dates_empty(self):
+        """Test extracting dates from empty response."""
         availability = {}
         expected_output = []
         result = extract_available_dates(availability)
         self.assertEqual(result, expected_output)
 
-        # Test case 2: Availability dictionary with no available dates
+    def test_extract_available_dates_no_availability(self):
+        """Test extracting dates when none are available."""
         availability = {
-            "2022-01": {
-                "items": [
+            "data": {
+                "availabilityList": [
                     {
-                        "date": "2022-01-01",
-                        "webProducts": [{"availability": {"available": False}}],
+                        "date": "2022-01-01T00:00:00.000Z",
+                        "products": [{"available": 0}],
                     },
                     {
-                        "date": "2022-01-02",
-                        "webProducts": [{"availability": {"available": False}}],
+                        "date": "2022-01-02T00:00:00.000Z",
+                        "products": [{"available": 0}],
                     },
                 ]
             }
@@ -127,28 +58,75 @@ class TestHelper(unittest.TestCase):
         result = extract_available_dates(availability)
         self.assertEqual(result, expected_output)
 
-        # Test case 3: Availability dictionary with available dates
+    def test_extract_available_dates_with_availability(self):
+        """Test extracting dates when some are available."""
         availability = {
-            "2022-01": {
-                "items": [
+            "data": {
+                "availabilityList": [
                     {
-                        "date": "2022-01-01",
-                        "webProducts": [{"availability": {"available": True}}],
+                        "date": "2022-01-01T00:00:00.000Z",
+                        "products": [{"available": 1}],
                     },
                     {
-                        "date": "2022-01-02",
-                        "webProducts": [{"availability": {"available": False}}],
+                        "date": "2022-01-02T00:00:00.000Z",
+                        "products": [{"available": 0}],
                     },
                     {
-                        "date": "2022-01-03",
-                        "webProducts": [{"availability": {"available": True}}],
+                        "date": "2022-01-03T00:00:00.000Z",
+                        "products": [{"available": 1}],
                     },
                 ]
             }
         }
-        expected_output = ["2022-01-01", "2022-01-03"]
+        expected_output = [
+            "2022-01-01T00:00:00.000Z",
+            "2022-01-03T00:00:00.000Z",
+        ]
         result = extract_available_dates(availability)
         self.assertEqual(result, expected_output)
+
+    def test_find_available_weekends_none(self):
+        """Test finding weekends when none exist."""
+        dates = [
+            "2022-01-03T00:00:00.000Z",  # Monday
+            "2022-01-04T00:00:00.000Z",  # Tuesday
+        ]
+        result = find_available_weekends(dates)
+        self.assertEqual(result, [])
+
+    def test_find_available_weekends_partial(self):
+        """Test finding weekends when only partial weekend available."""
+        dates = [
+            "2022-01-07T00:00:00.000Z",  # Friday
+            "2022-01-08T00:00:00.000Z",  # Saturday (but no Sunday)
+        ]
+        result = find_available_weekends(dates)
+        self.assertEqual(result, [])
+
+    def test_find_available_weekends_complete(self):
+        """Test finding weekends when full weekend is available."""
+        dates = [
+            "2022-01-07T00:00:00.000Z",  # Friday
+            "2022-01-08T00:00:00.000Z",  # Saturday
+            "2022-01-09T00:00:00.000Z",  # Sunday
+        ]
+        result = find_available_weekends(dates)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0][0], datetime.datetime(2022, 1, 7))
+        self.assertEqual(result[0][1], "Fri-Sun")
+
+    def test_find_available_weekends_multiple(self):
+        """Test finding multiple weekends."""
+        dates = [
+            "2022-01-07T00:00:00.000Z",  # Weekend 1: Friday
+            "2022-01-08T00:00:00.000Z",  # Weekend 1: Saturday
+            "2022-01-09T00:00:00.000Z",  # Weekend 1: Sunday
+            "2022-01-14T00:00:00.000Z",  # Weekend 2: Friday
+            "2022-01-15T00:00:00.000Z",  # Weekend 2: Saturday
+            "2022-01-16T00:00:00.000Z",  # Weekend 2: Sunday
+        ]
+        result = find_available_weekends(dates)
+        self.assertEqual(len(result), 2)
 
 
 if __name__ == "__main__":
