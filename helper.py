@@ -137,11 +137,20 @@ def print_date_statistics(dates):
     # Show Saturday availability (even if not full weekends)
     saturdays = [d for d in datetime_dates if d.weekday() == 5]  # Saturday = 5
     if saturdays and not weekends:
-        print(f"\n{Fore.YELLOW}⚠ {len(saturdays)} Saturday(s) available (but not full weekends):{Style.RESET_ALL}")
+        print(f"\n{Fore.YELLOW}📅 {len(saturdays)} Saturday(s) available (but not full weekends):{Style.RESET_ALL}")
         for saturday in saturdays[:5]:  # Show max 5
             print(f"  {Fore.YELLOW}•{Style.RESET_ALL} {saturday.strftime('%Y-%m-%d')}")
         if len(saturdays) > 5:
             print(f"  {Fore.YELLOW}... and {len(saturdays) - 5} more{Style.RESET_ALL}")
+    elif saturdays and weekends:
+        # Show how many Saturdays are part of full weekends
+        non_weekend_saturdays = [s for s in saturdays if s not in [w[0] + datetime.timedelta(days=1) for w in weekends]]
+        if non_weekend_saturdays:
+            print(f"\n{Fore.YELLOW}📅 {len(non_weekend_saturdays)} additional Saturday(s) (not full weekends):{Style.RESET_ALL}")
+            for saturday in non_weekend_saturdays[:3]:
+                print(f"  {Fore.YELLOW}•{Style.RESET_ALL} {saturday.strftime('%Y-%m-%d')}")
+            if len(non_weekend_saturdays) > 3:
+                print(f"  {Fore.YELLOW}... and {len(non_weekend_saturdays) - 3} more{Style.RESET_ALL}")
 
     # Compact weekday summary
     print(f"\n{Fore.CYAN}📅 Weekday breakdown:{Style.RESET_ALL}")
@@ -217,13 +226,24 @@ def diff_lists(list1, list2):
         print(f"{Fore.CYAN}ℹ No changes since last check{Style.RESET_ALL}")
     else:
         if added:
-            # Check if any new dates are weekends
+            # Check if any new dates are full weekends
             added_weekends = find_available_weekends(added)
+
+            # Check if any new dates are Saturdays
+            added_dates = [datetime.datetime.strptime(d[:10], "%Y-%m-%d") for d in added]
+            added_saturdays = [d for d in added_dates if d.weekday() == 5]
+
             if added_weekends:
                 print(f"{Fore.GREEN}★ NEW FULL WEEKEND(S) AVAILABLE! ★{Style.RESET_ALL}")
                 for friday, _ in added_weekends:
                     saturday = friday + datetime.timedelta(days=1)
                     print(f"  {Fore.GREEN}• {saturday.strftime('%Y-%m-%d')} (Saturday){Style.RESET_ALL}")
+            elif added_saturdays:
+                print(f"{Fore.YELLOW}★ NEW SATURDAY(S) AVAILABLE! ★{Style.RESET_ALL}")
+                for saturday in added_saturdays[:5]:
+                    print(f"  {Fore.YELLOW}• {saturday.strftime('%Y-%m-%d')} (Saturday){Style.RESET_ALL}")
+                if len(added_saturdays) > 5:
+                    print(f"  {Fore.YELLOW}... and {len(added_saturdays) - 5} more{Style.RESET_ALL}")
             else:
                 print(f"{Fore.GREEN}+ {len(added)} new date(s) available{Style.RESET_ALL}")
 

@@ -61,14 +61,31 @@ def check_cabin_availability(cabin_id: str, cabin_name: str = "Cabin"):
 
     # Send notifications for new dates
     if added:
+        # Check for new weekends
         new_weekends = find_available_weekends(added)
+
+        # Check for new Saturdays (even if not full weekends)
+        added_dates = [datetime.datetime.strptime(d[:10], "%Y-%m-%d") for d in added]
+        new_saturdays = [d for d in added_dates if d.weekday() == 5]  # Saturday = 5
+
         if new_weekends:
+            # Full weekends found - prioritize this notification
             weekend_str = ", ".join([f.strftime("%Y-%m-%d") for f, _ in new_weekends])
             send_notification(
-                "DNT Watcher - NEW WEEKENDS!",
-                f"{cabin_name}: {len(new_weekends)} new weekend(s)! {weekend_str}",
+                "DNT Watcher - NEW FULL WEEKENDS! 🎉",
+                f"{cabin_name}: {len(new_weekends)} weekend(s)! {weekend_str}",
+            )
+        elif new_saturdays:
+            # No full weekends but Saturdays available
+            saturday_str = ", ".join([d.strftime("%Y-%m-%d") for d in new_saturdays[:3]])
+            if len(new_saturdays) > 3:
+                saturday_str += f" +{len(new_saturdays) - 3} more"
+            send_notification(
+                "DNT Watcher - NEW SATURDAYS! 📅",
+                f"{cabin_name}: {len(new_saturdays)} Saturday(s)! {saturday_str}",
             )
         else:
+            # Other weekday dates
             send_notification(
                 "DNT Watcher", f"{cabin_name}: {len(added)} new date(s) available"
             )
@@ -104,13 +121,16 @@ def main():
 
 
 if __name__ == "__main__":
-    # Run once
+    import time
+
+    # Run first check immediately
     main()
 
-    # Uncomment to run on interval:
-    # import time
-    # INTERVAL = 3600  # 1 hour in seconds
-    # print(f"\nRunning continuously every {INTERVAL/3600} hour(s). Press Ctrl+C to stop.\n")
-    # while True:
-    #     time.sleep(INTERVAL)
-    #     main()
+    # Run on interval (every hour)
+    INTERVAL = 3600  # 1 hour in seconds
+    print(f"\n{Fore.CYAN}⏰ Running continuously every {INTERVAL/3600} hour(s).{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}   Press Ctrl+C to stop.{Style.RESET_ALL}\n")
+
+    while True:
+        time.sleep(INTERVAL)
+        main()
