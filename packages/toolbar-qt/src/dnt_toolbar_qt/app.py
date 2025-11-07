@@ -55,13 +55,23 @@ class DNTSystemTray:
 
     def _create_icon(self, emoji):
         """
-        Create a QIcon from an emoji (simplified version).
+        Create a QIcon from an emoji.
 
-        For production, you'd use actual icon files.
+        Creates a simple pixmap with the emoji rendered as text.
         """
-        # For now, return a default icon
-        # In a real implementation, you'd generate an icon from the emoji
-        return QIcon()  # Qt will use a default icon
+        from PyQt6.QtGui import QPainter, QColor
+
+        # Create a 64x64 pixmap
+        pixmap = QPixmap(64, 64)
+        pixmap.fill(QColor(0, 0, 0, 0))  # Transparent background
+
+        # Draw the emoji/text on it
+        painter = QPainter(pixmap)
+        painter.setFont(QFont("Apple Color Emoji", 48))
+        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, emoji)
+        painter.end()
+
+        return QIcon(pixmap)
 
     def setup_menu(self):
         """Setup the context menu with styled items."""

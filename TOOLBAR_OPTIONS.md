@@ -1,20 +1,20 @@
 # 🎨 DNT Watcher - Toolbar App Options
 
-DNT Watcher provides **THREE different toolbar implementations** with increasing levels of sophistication and visual polish. Choose based on your needs!
+DNT Watcher provides **TWO different toolbar implementations** with different strengths. Choose based on your needs!
 
 ---
 
 ## 📊 Quick Comparison
 
-| Feature | rumps (Enhanced) | PyQt6 | NSPopover (Native) |
-|---------|-----------------|-------|-------------------|
-| **Platform** | macOS only | Cross-platform | macOS only |
-| **Visual Polish** | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Ease of Setup** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Dependencies** | Small (rumps) | Medium (PyQt6) | Small (PyObjC) |
-| **Customization** | Limited | Extensive | Unlimited |
-| **Installation Size** | ~5MB | ~50MB | ~10MB |
-| **Best For** | Quick & Simple | Cross-platform | Maximum Beauty |
+| Feature | rumps (Enhanced) | PyQt6 |
+|---------|-----------------|-------|
+| **Platform** | macOS only | Cross-platform |
+| **Visual Polish** | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Ease of Setup** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Dependencies** | Small (rumps) | Medium (PyQt6) |
+| **Customization** | Limited | Extensive |
+| **Installation Size** | ~5MB | ~50MB |
+| **Best For** | Quick & Simple | Cross-platform |
 
 ---
 
@@ -123,77 +123,6 @@ uv run dnt-toolbar-qt
 
 ---
 
-## 3️⃣ NSPopover Native (Ultimate macOS Experience)
-
-### ✨ Features
-- **Custom popup window** with any layout
-- Native macOS NSPopover component
-- Unlimited UI possibilities
-- Beautiful animations
-- Can add charts, graphs, forms, etc.
-
-### 🎨 What It Looks Like
-```
-Menu Bar: 🏔
-
-When clicked: Beautiful popup window appears!
-
-┌──────────────────────────────────┐
-│      🏔 DNT WATCHER              │
-│                                  │
-│  ✅ Full Weekends:               │
-│     2 AVAILABLE!                 │
-│     (green, large, bold)         │
-│                                  │
-│  🎉 Total Dates: 64              │
-│     (yellow, medium)             │
-│                                  │
-│  🕐 Last Check: 17:23 (5m ago)   │
-│     (gray, small)                │
-│  ────────────────────────────    │
-│                                  │
-│  ┌──────────────────────┐        │
-│  │ 🔄 Rerun Check Now   │        │
-│  └──────────────────────┘        │
-│                                  │
-│  ┌──────────────────────┐        │
-│  │ ❌ Quit              │        │
-│  └──────────────────────┘        │
-└──────────────────────────────────┘
-```
-
-### 📦 Installation
-```bash
-# Add PyObjC to workspace
-uv sync --all-packages
-
-# Run
-uv run dnt-toolbar-native
-```
-
-### ✅ Pros
-- **Most beautiful option**
-- Completely custom layout
-- Native macOS animations
-- Can add ANY UI elements (charts, images, forms, etc.)
-- Feels like a native macOS app
-- Medium size (~10MB)
-
-### ❌ Cons
-- macOS only
-- More complex code
-- Requires PyObjC knowledge for customization
-- Takes more development time for features
-
-### 🎯 Best For
-- Maximum visual appeal
-- When you want the "wow factor"
-- Portfolio/showcase projects
-- When you plan to add rich visualizations
-- macOS-only deployment
-
----
-
 ## 🤔 Which Should You Choose?
 
 ### Use **Enhanced rumps** if:
@@ -208,18 +137,11 @@ uv run dnt-toolbar-native
 - ✅ You're familiar with Qt
 - ✅ You might build more complex features later
 
-### Use **NSPopover Native** if:
-- ✅ You're macOS-only
-- ✅ You want the most beautiful interface
-- ✅ You might add charts/graphs later
-- ✅ You want your app to stand out
-- ✅ You're comfortable with PyObjC
-
 ---
 
-## 🚀 Try Them All!
+## 🚀 Try Them Both!
 
-You can install all three and try each one:
+You can install both and try each one:
 
 ```bash
 # Sync all packages
@@ -230,19 +152,16 @@ uv run dnt-toolbar
 
 # Try PyQt6
 uv run dnt-toolbar-qt
-
-# Try NSPopover (native)
-uv run dnt-toolbar-native
 ```
 
-**They all use the same core logic**, so switching between them is easy!
+**They both use the same core logic**, so switching between them is easy!
 
 ---
 
 ## 🔧 Technical Details
 
 ### Architecture
-All three apps use:
+Both apps use:
 - `dnt-core` for business logic
 - `dnt-notification` for system notifications
 - Same configuration file (`dnt_hytter.yaml`)
@@ -253,17 +172,16 @@ Only the **UI layer** is different!
 ### File Sizes (Approximate)
 - rumps: 5MB total
 - PyQt6: 50MB total (Qt framework)
-- NSPopover: 10MB total
 
 ### Performance
-All three have similar performance - the bottleneck is the API calls, not the UI.
+Both have similar performance - the bottleneck is the API calls, not the UI.
 
 ---
 
 ## 📝 Future Enhancements
 
 ### Potential Additions
-With these three options, you could add:
+With these two options, you could add:
 
 **For rumps:**
 - More menu items with submenus
@@ -273,12 +191,7 @@ With these three options, you could add:
 - Charts showing availability over time
 - Settings dialog
 - Detailed cabin information
-
-**For NSPopover:**
-- Interactive calendar view
-- Graphs and visualizations
-- Animation effects
-- Embedded web view
+- Custom visualizations
 
 ---
 
@@ -291,10 +204,6 @@ With these three options, you could add:
 ### PyQt6
 - [Official Docs](https://www.riverbankcomputing.com/static/Docs/PyQt6/)
 - [Python GUIs Tutorial](https://www.pythonguis.com/pyqt6-tutorial/)
-
-### NSPopover / PyObjC
-- [PyObjC Docs](https://pyobjc.readthedocs.io/)
-- [Apple NSPopover Docs](https://developer.apple.com/documentation/appkit/nspopover)
 
 ---
 

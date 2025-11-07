@@ -136,13 +136,12 @@ Monitoring 2 cabin(s)
 
 ### Toolbar App Mode
 
-**DNT Watcher offers THREE toolbar options!** 🎨
+**DNT Watcher offers TWO toolbar options!** 🎨
 
 | Option | Platform | Beauty | Best For |
 |--------|----------|--------|----------|
 | **rumps (Enhanced)** | macOS | ⭐⭐⭐ | Most users (recommended) |
 | **PyQt6** | Cross-platform | ⭐⭐⭐⭐ | Windows/Linux support |
-| **NSPopover (Native)** | macOS | ⭐⭐⭐⭐⭐ | Maximum beauty! |
 
 **Quick Start (rumps - recommended):**
 ```bash
@@ -153,18 +152,17 @@ Monitoring 2 cabin(s)
 uv run dnt-toolbar
 ```
 
-**Try all three:**
+**Try both:**
 ```bash
 uv sync --all-packages
 
 uv run dnt-toolbar          # Enhanced rumps (colored text)
 uv run dnt-toolbar-qt       # PyQt6 (cross-platform)
-uv run dnt-toolbar-native   # NSPopover (native macOS)
 ```
 
 **📖 See [TOOLBAR_OPTIONS.md](TOOLBAR_OPTIONS.md) for detailed comparison and screenshots!**
 
-All toolbar apps provide:
+Both toolbar apps provide:
 - 🏔 Menu bar icon with dynamic status
 - 📊 Beautiful formatted status display
 - 🔄 "Rerun Check Now" button
@@ -321,11 +319,17 @@ graph TD
 - `dnt-watcher` - Run once
 - Python API: `run_continuous(interval)`
 
-### dnt-toolbar
+### dnt-toolbar (Enhanced rumps)
 **Dependencies:** `dnt-core`, `dnt-notification`, `rumps`
 **Entry Points:**
 - `dnt-toolbar` - Launch menu bar app
 **Platform:** macOS only
+
+### dnt-toolbar-qt (PyQt6)
+**Dependencies:** `dnt-core`, `dnt-notification`, `PyQt6`
+**Entry Points:**
+- `dnt-toolbar-qt` - Launch cross-platform toolbar
+**Platform:** Cross-platform (macOS, Windows, Linux)
 
 ## 🛠 Requirements
 

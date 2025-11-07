@@ -10,8 +10,7 @@ members = [
     "packages/notification",
     "packages/cli",
     "packages/toolbar-app",
-    "packages/toolbar-qt",
-    "packages/toolbar-native"
+    "packages/toolbar-qt"
 ]
 
 [tool.uv]
