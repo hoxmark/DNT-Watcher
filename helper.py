@@ -1,76 +1,43 @@
+"""Helper functions for DNT cabin availability checking."""
+
 import datetime
 import json
 import os
 import time
 
 import requests
+from colorama import Fore, Style, init
+
+# Initialize colorama
+init(autoreset=True)
 
 
-def get_months_to_iterate_over(date: datetime.datetime):
-    """
-    Get a generator that yields the months to iterate over until it hits any November (11) of this year or next.
-
-    Parameters:
-    date (datetime.datetime): The starting date to begin iterating from.
-
-    Yields:
-    str: A string representing the year and month in the format "YYYY-MM".
-
-    """
-    current_month = date.month
-    current_year = date.year
-    while True:
-        yield f"{current_year}-{current_month:02d}"
-        current_month += 1
-        if current_month > 12:
-            current_month = 1
-            current_year += 1
-        if current_month == 11:
-            break
-
-
-def get_months_from_now_out_this_year(date: datetime.datetime):
-    """
-    Get a generator that yields the months from the current month until the end of the current year.
-
-    Parameters:
-    date (datetime.datetime): The starting date to begin iterating from.
-
-    Yields:
-    str: A string representing the year and month in the format "YYYY-MM".
-
-    """
-    current_month = date.month
-    current_year = date.year
-    while current_year == date.year:
-        yield f"{current_year}-{current_month:02d}"
-        current_month += 1
-        if current_month > 12:
-            current_month = 1
-            current_year += 1
-
-
-def get_availability(url: str, months: list):
+def get_availability(cabin_id: str, from_date: str, to_date: str):
     """
     Get the availability of a specific cabin from the DNT website.
 
     Parameters:
-    url (str): The URL to the DNT website.
-    months (list): A list of strings representing the months to iterate over.
+    cabin_id (str): The cabin ID (e.g., "101297" for Stallen).
+    from_date (str): Start date in YYYY-MM-DD format.
+    to_date (str): End date in YYYY-MM-DD format.
 
     Returns:
-    dict: A dictionary containing the availability of the cabin.
+    dict: A dictionary containing the availability data.
     """
-    availability = {}
-    for month in months:
-        try:
-            response = requests.get(f"{url}{month}/")
-            response.raise_for_status()
-            data = response.json()
-            availability[month] = data
-        except requests.exceptions.RequestException as e:
-            print(f"Error loading availability for {month}: {e}")
-    return availability
+    url = "https://hyttebestilling.dnt.no/api/booking/availability-calendar"
+    params = {
+        "cabinId": cabin_id,
+        "fromDate": from_date,
+        "toDate": to_date
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error loading availability: {e}")
+        return None
 
 
 def extract_available_dates(availability: dict):
@@ -78,23 +45,58 @@ def extract_available_dates(availability: dict):
     Extracts and returns a list of available dates from the given availability dictionary.
 
     Args:
-        availability (dict): A dictionary containing availability data.
+        availability (dict): A dictionary containing availability data from the new API format.
 
     Returns:
-        list: A list of available dates.
+        list: A list of available dates in ISO format.
 
     """
+    if not availability or "data" not in availability:
+        return []
+
     available_dates = []
-    for month, data in availability.items():
-        for days in data["items"]:
-            if days["webProducts"][0]["availability"]["available"]:
-                available_dates.append(days["date"])
+    for day_data in availability["data"]["availabilityList"]:
+        # Check if any product is available (available > 0)
+        for product in day_data.get("products", []):
+            if product.get("available", 0) > 0:
+                available_dates.append(day_data["date"])
+                break  # Only add the date once even if multiple products available
+
     return available_dates
+
+
+def find_available_weekends(dates):
+    """
+    Finds full weekends (Friday-Sunday) that are available.
+
+    Args:
+        dates (list): A list of date strings in ISO format.
+
+    Returns:
+        list: A list of tuples containing (friday_date, "Fri-Sun") for each available weekend.
+    """
+    datetime_dates = [
+        datetime.datetime.strptime(date[:10], "%Y-%m-%d") for date in dates
+    ]
+    date_set = set(datetime_dates)
+
+    weekends = []
+    for date in sorted(datetime_dates):
+        # Check if this is a Friday (weekday() == 4)
+        if date.weekday() == 4:
+            saturday = date + datetime.timedelta(days=1)
+            sunday = date + datetime.timedelta(days=2)
+
+            # Check if both Saturday and Sunday are also available
+            if saturday in date_set and sunday in date_set:
+                weekends.append((date, "Fri-Sun"))
+
+    return weekends
 
 
 def print_date_statistics(dates):
     """
-    Prints statistics about a list of dates.
+    Prints clean, colorful statistics focused on weekend availability.
 
     Args:
         dates (list): A list of dates in the format 'YYYY-MM-DD'.
@@ -105,32 +107,56 @@ def print_date_statistics(dates):
     datetime_dates = [
         datetime.datetime.strptime(date[:10], "%Y-%m-%d") for date in dates
     ]
-    print(datetime_dates)
-    print("-" * 30, "Date Statistics", "-" * 30)
-    print(f"Earliest date: {min(datetime_dates)}")
-    print(f"Latest date: {max(datetime_dates)}")
-    print(f"Total number of dates: {len(datetime_dates)}")
-    print(f"Unique dates: {len(set(datetime_dates))}")
-    print(f"Dates sorted in ascending order: {sorted(datetime_dates)}")
 
-    # Count the number of dates for each week day
-    weekdays = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-    ]
-    weekday_counts = {weekday: 0 for weekday in weekdays}
+    if not datetime_dates:
+        print(f"\n{Fore.YELLOW}⚠ No available dates found{Style.RESET_ALL}\n")
+        return
+
+    # Find weekends
+    weekends = find_available_weekends(dates)
+
+    # Count weekday availability
+    weekday_counts = {i: 0 for i in range(7)}  # 0=Monday, 6=Sunday
     for date in datetime_dates:
-        weekday = weekdays[date.weekday()]
-        weekday_counts[weekday] += 1
+        weekday_counts[date.weekday()] += 1
 
-    print("-" * 30, "Weekday Statistics", "-" * 30)
-    for weekday, count in weekday_counts.items():
-        print(f"{weekday}: {count}")
+    # Print summary
+    total_dates = len(datetime_dates)
+    print(f"\n{Fore.CYAN}📊 Total available dates:{Style.RESET_ALL} {total_dates}")
+
+    # Print weekend availability - THE MOST IMPORTANT PART
+    if weekends:
+        print(f"\n{Fore.GREEN}✓ {len(weekends)} FULL WEEKEND(S) AVAILABLE:{Style.RESET_ALL}")
+        for friday, _ in weekends:
+            saturday = friday + datetime.timedelta(days=1)
+            sunday = friday + datetime.timedelta(days=2)
+            print(f"  {Fore.GREEN}•{Style.RESET_ALL} {Fore.WHITE}{saturday.strftime('%Y-%m-%d')} (Saturday){Style.RESET_ALL} - Full Fri-Sun weekend")
+    else:
+        print(f"\n{Fore.RED}✗ No full weekends available{Style.RESET_ALL}")
+
+    # Show Saturday availability (even if not full weekends)
+    saturdays = [d for d in datetime_dates if d.weekday() == 5]  # Saturday = 5
+    if saturdays and not weekends:
+        print(f"\n{Fore.YELLOW}⚠ {len(saturdays)} Saturday(s) available (but not full weekends):{Style.RESET_ALL}")
+        for saturday in saturdays[:5]:  # Show max 5
+            print(f"  {Fore.YELLOW}•{Style.RESET_ALL} {saturday.strftime('%Y-%m-%d')}")
+        if len(saturdays) > 5:
+            print(f"  {Fore.YELLOW}... and {len(saturdays) - 5} more{Style.RESET_ALL}")
+
+    # Compact weekday summary
+    print(f"\n{Fore.CYAN}📅 Weekday breakdown:{Style.RESET_ALL}")
+    weekday_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    weekday_summary = " | ".join([
+        f"{name}: {Fore.GREEN if weekday_counts[i] > 0 else Fore.RED}{weekday_counts[i]}{Style.RESET_ALL}"
+        for i, name in enumerate(weekday_names)
+    ])
+    print(f"  {weekday_summary}")
+
+    # Date range
+    earliest = min(datetime_dates)
+    latest = max(datetime_dates)
+    print(f"\n{Fore.CYAN}📆 Range:{Style.RESET_ALL} {earliest.strftime('%Y-%m-%d')} → {latest.strftime('%Y-%m-%d')}")
+    print()
 
 
 def save_result_as_json(result):
@@ -175,27 +201,33 @@ def load_latest_files():
 
 def diff_lists(list1, list2):
     """
-    Compare two lists and print the added and removed elements.
+    Compare two lists and return added/removed elements with clean output.
 
     Args:
         list1 (list): The first list to compare.
         list2 (list): The second list to compare.
 
     Returns:
-        None
+        tuple: (added_dates, removed_dates) as lists
     """
     added = list(set(list2) - set(list1))
     removed = list(set(list1) - set(list2))
 
     if not added and not removed:
-        print("No change")
+        print(f"{Fore.CYAN}ℹ No changes since last check{Style.RESET_ALL}")
     else:
-        print("Added dates:")
-        for date in added:
-            print(date)
+        if added:
+            # Check if any new dates are weekends
+            added_weekends = find_available_weekends(added)
+            if added_weekends:
+                print(f"{Fore.GREEN}★ NEW FULL WEEKEND(S) AVAILABLE! ★{Style.RESET_ALL}")
+                for friday, _ in added_weekends:
+                    saturday = friday + datetime.timedelta(days=1)
+                    print(f"  {Fore.GREEN}• {saturday.strftime('%Y-%m-%d')} (Saturday){Style.RESET_ALL}")
+            else:
+                print(f"{Fore.GREEN}+ {len(added)} new date(s) available{Style.RESET_ALL}")
 
-        print("Removed dates:")
-        for date in removed:
-            print(date)
+        if removed:
+            print(f"{Fore.RED}- {len(removed)} date(s) no longer available{Style.RESET_ALL}")
 
-    return added
+    return added, removed
