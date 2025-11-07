@@ -1,0 +1,21 @@
+[project]
+name = "dnt-toolbar-native"
+version = "1.0.0"
+description = "Native macOS NSPopover-based toolbar app for DNT cabin availability monitoring"
+requires-python = ">=3.11"
+dependencies = [
+    "dnt-core",
+    "dnt-notification",
+    "pyobjc-framework-Cocoa>=10.0",
+]
+
+[tool.uv.sources]
+dnt-core = { workspace = true }
+dnt-notification = { workspace = true }
+
+[project.scripts]
+dnt-toolbar-native = "dnt_toolbar_native.app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

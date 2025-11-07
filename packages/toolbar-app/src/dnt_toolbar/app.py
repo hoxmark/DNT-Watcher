@@ -15,6 +15,15 @@ import sys
 import threading
 
 import rumps
+from AppKit import NSAttributedString
+from Cocoa import (
+    NSColor,
+    NSFont,
+    NSFontAttributeName,
+    NSForegroundColorAttributeName,
+)
+from PyObjCTools.Conversion import propertyListFromPythonCollection
+
 from dnt_core import (
     extract_available_dates,
     extract_cabin_id,
@@ -32,15 +41,57 @@ class DNTToolbarApp(rumps.App):
 
     def __init__(self):
         super(DNTToolbarApp, self).__init__("DNT", "🏔")
+
+        # Create menu structure - we'll populate it dynamically
+        self.weekend_item = rumps.MenuItem("Loading...")
+        self.dates_item = rumps.MenuItem("Loading...")
+        self.check_time_item = rumps.MenuItem("Loading...")
+
         self.menu = [
-            "Status",
+            self.weekend_item,
+            self.dates_item,
+            rumps.separator,
+            self.check_time_item,
             rumps.separator,
             "🔄 Rerun Check Now",
             rumps.separator,
             "❌ Quit"
         ]
-        self.status_item = self.menu["Status"]
+
         self.update_status_display()
+
+    def _create_styled_string(self, text, color=None, font_size=13.0, bold=False):
+        """
+        Create an NSAttributedString with custom styling.
+
+        Args:
+            text (str): The text to style
+            color (NSColor): Color for the text (None = system default)
+            font_size (float): Font size in points
+            bold (bool): Whether to use bold font
+
+        Returns:
+            NSAttributedString: Styled text
+        """
+        # Choose font
+        if bold:
+            font = NSFont.boldSystemFontOfSize_(font_size)
+        else:
+            # SF Mono is macOS's monospaced system font
+            font = NSFont.monospacedSystemFontOfSize_weight_(font_size, 0.0)
+
+        # Build attributes dictionary
+        attrs = {NSFontAttributeName: font}
+
+        if color:
+            attrs[NSForegroundColorAttributeName] = color
+
+        # Convert to proper format for PyObjC
+        attributes = propertyListFromPythonCollection(
+            attrs, conversionHelper=lambda x: x
+        )
+
+        return NSAttributedString.alloc().initWithString_attributes_(text, attributes)
 
     def get_latest_status(self):
         """
@@ -120,7 +171,7 @@ class DNTToolbarApp(rumps.App):
             }
 
     def update_status_display(self):
-        """Update the status menu item with current information."""
+        """Update the status menu item with current information using styled text."""
         status = self.get_latest_status()
 
         # Format last check time nicely
@@ -150,44 +201,86 @@ class DNTToolbarApp(rumps.App):
         else:
             last_check_display = last_check
 
-        # Build beautifully formatted status text
+        # Define colors
+        green_color = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.7, 0.0, 1.0)
+        red_color = NSColor.colorWithRed_green_blue_alpha_(0.9, 0.0, 0.0, 1.0)
+        yellow_color = NSColor.colorWithRed_green_blue_alpha_(0.9, 0.7, 0.0, 1.0)
+        blue_color = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.5, 1.0, 1.0)
+        gray_color = NSColor.colorWithRed_green_blue_alpha_(0.5, 0.5, 0.5, 1.0)
+
+        # Build beautifully formatted status text with colors
         status_lines = []
 
-        # Header with icon
+        # Header with icon (bold, blue)
         status_lines.append("━━━━━━━━━━━━━━━━━━━━━━━")
-        status_lines.append("🏔  DNT WATCHER STATUS")
+        header = self._create_styled_string(
+            "🏔  DNT WATCHER STATUS",
+            color=blue_color,
+            font_size=14.0,
+            bold=True
+        )
+        status_lines.append(header)
         status_lines.append("━━━━━━━━━━━━━━━━━━━━━━━")
         status_lines.append("")
 
-        # Last check time
-        status_lines.append(f"🕐 Last Check: {last_check_display}")
+        # Last check time (gray)
+        status_lines.append(
+            self._create_styled_string(
+                f"🕐 Last Check: {last_check_display}",
+                color=gray_color,
+                font_size=12.0
+            )
+        )
         status_lines.append("")
 
-        # Availability stats with visual indicators
+        # Availability stats with colored text
         if status['weekends'] > 0:
-            weekend_icon = "✅"
-            weekend_text = f"{status['weekends']} AVAILABLE!"
+            weekend_text = f"✅ Full Weekends: {status['weekends']} AVAILABLE!"
+            weekend_styled = self._create_styled_string(
+                weekend_text,
+                color=green_color,
+                font_size=13.0,
+                bold=True
+            )
         else:
-            weekend_icon = "❌"
-            weekend_text = "None found"
+            weekend_text = "❌ Full Weekends: None found"
+            weekend_styled = self._create_styled_string(
+                weekend_text,
+                color=red_color,
+                font_size=13.0
+            )
 
-        status_lines.append(f"{weekend_icon} Full Weekends: {weekend_text}")
+        status_lines.append(weekend_styled)
 
-        # Total dates with different icons based on amount
+        # Total dates with different colors based on amount
         if status['total_dates'] > 50:
+            dates_color = green_color
             dates_icon = "🎉"
         elif status['total_dates'] > 0:
+            dates_color = yellow_color
             dates_icon = "📅"
         else:
+            dates_color = red_color
             dates_icon = "⚠️"
 
-        status_lines.append(f"{dates_icon} Total Dates: {status['total_dates']}")
+        dates_styled = self._create_styled_string(
+            f"{dates_icon} Total Dates: {status['total_dates']}",
+            color=dates_color,
+            font_size=13.0
+        )
+        status_lines.append(dates_styled)
 
         # Cabin list (more compact)
         if status['cabins']:
             status_lines.append("")
             status_lines.append("━━━━━━━━━━━━━━━━━━━━━━━")
-            status_lines.append(f"📍 Monitoring {len(status['cabins'])} cabin(s):")
+            status_lines.append(
+                self._create_styled_string(
+                    f"📍 Monitoring {len(status['cabins'])} cabin(s):",
+                    color=blue_color,
+                    font_size=12.0
+                )
+            )
             status_lines.append("")
             for i, cabin in enumerate(status['cabins'], 1):
                 # Shorten cabin names if too long
@@ -196,7 +289,16 @@ class DNTToolbarApp(rumps.App):
                     name = name[:17] + "..."
                 status_lines.append(f"  {i}. {name}")
 
-        self.status_item.title = "\n".join(status_lines)
+        # Set styled attributed titles for menu items
+        self.weekend_item._menuitem.setAttributedTitle_(weekend_styled)
+        self.dates_item._menuitem.setAttributedTitle_(dates_styled)
+        self.check_time_item._menuitem.setAttributedTitle_(
+            self._create_styled_string(
+                f"🕐 Last Check: {last_check_display}",
+                color=gray_color,
+                font_size=11.0
+            )
+        )
 
         # Update menu bar icon based on weekend availability
         if status['weekends'] > 0:

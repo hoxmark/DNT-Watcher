@@ -1,0 +1,21 @@
+[project]
+name = "dnt-toolbar-qt"
+version = "1.0.0"
+description = "PyQt6-based toolbar app for DNT cabin availability monitoring"
+requires-python = ">=3.11"
+dependencies = [
+    "dnt-core",
+    "dnt-notification",
+    "PyQt6>=6.6.0",
+]
+
+[tool.uv.sources]
+dnt-core = { workspace = true }
+dnt-notification = { workspace = true }
+
+[project.scripts]
+dnt-toolbar-qt = "dnt_toolbar_qt.app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

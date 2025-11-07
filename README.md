@@ -136,26 +136,39 @@ Monitoring 2 cabin(s)
 
 ### Toolbar App Mode
 
-**First-time setup (macOS only):**
+**DNT Watcher offers THREE toolbar options!** 🎨
+
+| Option | Platform | Beauty | Best For |
+|--------|----------|--------|----------|
+| **rumps (Enhanced)** | macOS | ⭐⭐⭐ | Most users (recommended) |
+| **PyQt6** | Cross-platform | ⭐⭐⭐⭐ | Windows/Linux support |
+| **NSPopover (Native)** | macOS | ⭐⭐⭐⭐⭐ | Maximum beauty! |
+
+**Quick Start (rumps - recommended):**
 ```bash
-# Run the setup script to configure notifications
+# Setup (one-time)
 ./setup_toolbar.sh
 
-# Or manually:
-uv sync --all-packages
-/usr/libexec/PlistBuddy -c 'Add :CFBundleIdentifier string "io.hoxmark.dnt-watcher"' .venv/bin/Info.plist
-```
-
-**Launch the menu bar app:**
-```bash
+# Launch
 uv run dnt-toolbar
 ```
 
-The toolbar app provides:
-- 🏔 Menu bar icon (dynamic: 🏔 = none, 🏔📅 = dates, 🏔✅ = weekends!)
-- 📊 Beautiful formatted status with emojis and relative time
-- 🔄 "Rerun Check Now" button for manual checks
-- 🔔 macOS notifications for new availability
+**Try all three:**
+```bash
+uv sync --all-packages
+
+uv run dnt-toolbar          # Enhanced rumps (colored text)
+uv run dnt-toolbar-qt       # PyQt6 (cross-platform)
+uv run dnt-toolbar-native   # NSPopover (native macOS)
+```
+
+**📖 See [TOOLBAR_OPTIONS.md](TOOLBAR_OPTIONS.md) for detailed comparison and screenshots!**
+
+All toolbar apps provide:
+- 🏔 Menu bar icon with dynamic status
+- 📊 Beautiful formatted status display
+- 🔄 "Rerun Check Now" button
+- 🔔 System notifications
 
 ### Continuous Monitoring
 
