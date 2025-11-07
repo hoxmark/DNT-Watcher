@@ -1,0 +1,21 @@
+[project]
+name = "dnt-toolbar"
+version = "1.0.0"
+description = "macOS toolbar app for DNT cabin availability monitoring"
+requires-python = ">=3.11"
+dependencies = [
+    "dnt-core",
+    "dnt-notification",
+    "rumps>=0.4.0",
+]
+
+[tool.uv.sources]
+dnt-core = { workspace = true }
+dnt-notification = { workspace = true }
+
+[project.scripts]
+dnt-toolbar = "dnt_toolbar.app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
