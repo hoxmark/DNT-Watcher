@@ -1,0 +1,12 @@
+dnt_hytter:
+  - navn: "Stallen"
+    url: "https://hyttebestilling.dnt.no/hytte/101297"
+    beskrivelse: "Østmarka – idyllisk ved Røyrivann, kan bestilles som hel hytte. Passer for vennegjeng eller familiehelg."
+  
+  - navn: "Skjennungsvolden"
+    url: "https://hyttebestilling.dnt.no/hytte/101233402"
+    beskrivelse: "Nordmarka – klassisk storstue med utsikt over Skjennungen, lett adkomst fra Frognerseteren."
+  
+  - navn: "Fuglemyrhytta"
+    url: "https://hyttebestilling.dnt.no/hytte/101209"
+    beskrivelse: "Nordmarka – moderne DNT-hytte med fantastisk utsikt over Oslofjorden. Perfekt for en helg nær byen."
