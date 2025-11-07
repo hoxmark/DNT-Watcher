@@ -136,16 +136,26 @@ Monitoring 2 cabin(s)
 
 ### Toolbar App Mode
 
-Launch the menu bar app:
+**First-time setup (macOS only):**
+```bash
+# Run the setup script to configure notifications
+./setup_toolbar.sh
+
+# Or manually:
+uv sync --all-packages
+/usr/libexec/PlistBuddy -c 'Add :CFBundleIdentifier string "io.hoxmark.dnt-watcher"' .venv/bin/Info.plist
+```
+
+**Launch the menu bar app:**
 ```bash
 uv run dnt-toolbar
 ```
 
 The toolbar app provides:
-- 🏔 Menu bar icon (shows ✓ when weekends available)
-- 📊 Status display with latest check results
-- 🔄 "Rerun Check Now" for manual triggers
-- 🔔 Notifications sent to system notification center
+- 🏔 Menu bar icon (dynamic: 🏔 = none, 🏔📅 = dates, 🏔✅ = weekends!)
+- 📊 Beautiful formatted status with emojis and relative time
+- 🔄 "Rerun Check Now" button for manual checks
+- 🔔 macOS notifications for new availability
 
 ### Continuous Monitoring
 
@@ -350,6 +360,47 @@ GET https://hyttebestilling.dnt.no/api/booking/availability-calendar
 3. **Testability**: Business logic isolated and easily tested
 4. **Scalability**: Easy to add new applications (web UI, mobile, etc.)
 5. **Maintainability**: Change once, benefit everywhere
+
+## 🔧 Troubleshooting
+
+### Toolbar App: "Failed to setup the notification center"
+
+**Problem:**
+```
+RuntimeError: Failed to setup the notification center.
+This issue occurs when the "Info.plist" file cannot be found...
+```
+
+**Solution:**
+Run the setup script:
+```bash
+./setup_toolbar.sh
+```
+
+Or manually create the Info.plist:
+```bash
+/usr/libexec/PlistBuddy -c 'Add :CFBundleIdentifier string "io.hoxmark.dnt-watcher"' .venv/bin/Info.plist
+```
+
+This is a one-time setup required for macOS notifications to work.
+
+### UV Sync Issues
+
+If you get dependency resolution errors:
+```bash
+# Remove lock file and resync
+rm uv.lock
+uv sync --all-packages
+```
+
+### CLI Shows No Colors
+
+Make sure colorama is installed:
+```bash
+uv sync
+```
+
+If still no colors, your terminal may not support ANSI codes.
 
 ## 📝 License
 
