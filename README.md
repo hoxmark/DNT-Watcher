@@ -1,24 +1,29 @@
-# DNT Watcher
+# 🏔 DNT Watcher
 
-Monitor DNT (Den Norske Turistforening) cabin availability and get notified when your favorite cabins become available - especially full weekends!
+> Never miss a cabin weekend! Monitor DNT (Den Norske Turistforening) cabin availability and get instant notifications when full weekends become available.
 
-## Features
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](test_helper.py)
 
-- **Multi-Cabin Monitoring**: Configure multiple cabins via YAML
-- **Weekend Detection**: Automatically identifies full Friday-Sunday weekends
-- **Change Tracking**: Compares availability between runs to detect new dates
-- **macOS Notifications**: Get instant alerts when new dates or weekends become available
-- **Detailed Statistics**: View availability by weekday and date ranges
-- **Simple Configuration**: Easy YAML-based cabin setup
+## ✨ Features
 
-## Quick Start
+- 🎯 **Weekend-Focused**: Automatically detects full Friday-Sunday weekends
+- 🎨 **Beautiful CLI**: Colorful, clean output highlighting what matters most
+- 📱 **Smart Notifications**: macOS alerts when new weekends or dates become available
+- 📊 **Multi-Cabin Monitoring**: Track multiple cabins simultaneously via YAML config
+- 📈 **Change Detection**: Compares runs to identify newly available dates
+- ⚡ **Fast & Simple**: Single API call, easy YAML configuration
+
+## 🚀 Quick Start
 
 ### Installation
 
-Using `uv` (recommended):
+**Using `uv` (recommended):**
 
 ```bash
 # Clone the repository
+git clone https://github.com/hoxmark/DNT-Watcher.git
 cd DNT-Watcher
 
 # Install dependencies
@@ -28,7 +33,7 @@ uv sync
 uv run python run.py
 ```
 
-Using pip:
+**Using pip:**
 
 ```bash
 pip install requests pyyaml colorama
@@ -50,47 +55,66 @@ dnt_hytter:
     beskrivelse: "Nordmarka – moderne DNT-hytte"
 ```
 
-## Example Output
+Just add the booking URL from [hyttebestilling.dnt.no](https://hyttebestilling.dnt.no) - the cabin ID is extracted automatically!
+
+## 📸 Example Output
+
+The CLI is designed to be clean and focused on **weekend availability**:
 
 ```
-================================================================================
-                  DNT Watcher - Monitoring Cabin Availability
-================================================================================
-Loaded 2 cabin(s) from configuration
+============================================================
+  🏔  DNT WATCHER - Cabin Availability Monitor  🏔
+============================================================
+Monitoring 3 cabin(s)
 
-Checking availability for Stallen (ID: 101297)...
-================================================================================
-                                DATE STATISTICS
-================================================================================
-Earliest date: 2025-11-11 (Tuesday)
-Latest date: 2026-11-05 (Thursday)
-Total number of dates: 68
-Unique dates: 68
+━━━ Stallen (ID: 101297) ━━━
 
---------------------------------------------------------------------------------
-                              WEEKDAY DISTRIBUTION
---------------------------------------------------------------------------------
-Monday    : 17
-Tuesday   : 23
-Wednesday : 20
-Thursday  : 8
-Friday    : 0
-Saturday  : 0
-Sunday    : 0
+📊 Total available dates: 64
 
-================================================================================
-                   AVAILABLE FULL WEEKENDS (Friday-Sunday): 0
-================================================================================
-  No full weekends available
-================================================================================
+✗ No full weekends available
+
+📅 Weekday breakdown:
+  Mon: 16 | Tue: 22 | Wed: 19 | Thu: 7 | Fri: 0 | Sat: 0 | Sun: 0
+
+📆 Range: 2025-11-11 → 2026-10-29
+
++ 64 new date(s) available
+
+
+━━━ Skjennungsvolden (ID: 101233402) ━━━
+
+📊 Total available dates: 115
+
+✓ 2 FULL WEEKEND(S) AVAILABLE:
+  • 2026-03-14 (Saturday) - Full Fri-Sun weekend
+  • 2026-09-19 (Saturday) - Full Fri-Sun weekend
+
+📅 Weekday breakdown:
+  Mon: 22 | Tue: 25 | Wed: 27 | Thu: 21 | Fri: 2 | Sat: 2 | Sun: 16
+
+📆 Range: 2025-11-12 → 2026-10-29
+
+★ NEW FULL WEEKEND(S) AVAILABLE! ★
+  • 2026-03-14 (Saturday)
+  • 2026-09-19 (Saturday)
+
+============================================================
+  ✓ Check complete!
+============================================================
 ```
 
-## Continuous Monitoring
+**Colors in the terminal:**
+- 🟢 Green = Full weekends available (the good news!)
+- 🔴 Red = No weekends / unavailable
+- 🟡 Yellow = Partial availability (Saturdays without full weekends)
+- 🔵 Cyan = Informational messages
 
-To run the watcher continuously (e.g., every hour), edit `run.py` and uncomment the interval section:
+## 🔄 Continuous Monitoring
+
+Run the watcher on an hourly schedule to catch new availability:
 
 ```python
-# Uncomment to run on interval:
+# In run.py, uncomment these lines:
 import time
 INTERVAL = 3600  # 1 hour in seconds
 print(f"\nRunning continuously every {INTERVAL/3600} hour(s). Press Ctrl+C to stop.\n")
@@ -99,39 +123,76 @@ while True:
     main()
 ```
 
-## How It Works
+Or set up a cron job:
+```bash
+# Run every hour
+0 * * * * cd /path/to/DNT-Watcher && uv run python run.py
+```
 
-1. **Fetch**: Queries the DNT API for availability from today until November of next year
-2. **Extract**: Parses available dates from the API response
-3. **Analyze**: Identifies full weekends and computes statistics
-4. **Save**: Stores availability snapshot in `history/` folder
-5. **Compare**: Diffs with previous run to detect new dates
-6. **Notify**: Sends macOS notification for new dates/weekends
+## 🎯 Why This Project?
 
-## Requirements
+DNT cabins are incredibly popular, especially for weekend trips. Full weekends (Fri-Sun) get booked quickly, and the DNT website doesn't offer weekend-specific notifications. This tool:
 
-- Python 3.11+
-- macOS (for notifications)
-- Dependencies: `requests`, `pyyaml`, `colorama`
+1. **Focuses on weekends** - Highlights full Fri-Sun availability
+2. **Tracks changes** - Notifies you the moment new dates appear
+3. **Monitors multiple cabins** - Check all your favorites at once
+4. **Runs automatically** - Set it and forget it
 
-## Testing
+## 🔧 How It Works
 
-Run the test suite:
+1. **Fetch**: Queries DNT API for availability (today → November next year)
+2. **Extract**: Parses available dates from API response
+3. **Analyze**: Identifies full Fri-Sun weekends
+4. **Save**: Stores snapshot in `history/` folder
+5. **Compare**: Diffs with previous run to detect changes
+6. **Notify**: Sends macOS notification for new weekends/dates
+
+## 🧪 Testing
+
+All functionality is covered by unit tests:
 
 ```bash
 uv run python -m unittest test_helper.py -v
 ```
 
-## Project Structure
+**Tests cover:**
+- ✅ Cabin ID extraction from URLs
+- ✅ API response parsing
+- ✅ Weekend detection (partial, complete, multiple)
+- ✅ Configuration loading
 
-- `run.py` - Main entry point
-- `config.py` - YAML configuration loading
-- `helper.py` - Core availability checking logic
-- `notify.py` - macOS notification system
-- `test_helper.py` - Unit tests
-- `dnt_hytter.yaml` - Cabin configuration
-- `history/` - Availability history (auto-generated)
+## 📁 Project Structure
 
-## License
+```
+DNT-Watcher/
+├── run.py              # Main entry point with colorful CLI
+├── config.py           # YAML configuration loader
+├── helper.py           # Core logic (API, weekend detection, stats)
+├── notify.py           # macOS notification system
+├── test_helper.py      # Unit tests (8 tests, all passing)
+├── dnt_hytter.yaml     # Cabin configuration
+├── pyproject.toml      # Dependencies (uv/pip)
+├── README.md           # This file
+├── CLAUDE.md           # Developer documentation
+└── history/            # Availability history (auto-generated)
+```
 
-MIT License
+## 🛠 Requirements
+
+- Python 3.11+
+- macOS (for notifications - uses AppleScript)
+- Dependencies: `requests`, `pyyaml`, `colorama`
+
+## 📝 License
+
+MIT License - feel free to use and modify!
+
+## 🙏 Acknowledgments
+
+- Built with [Claude Code](https://claude.com/claude-code)
+- Uses the DNT Hyttebestilling API
+- Inspired by the frustration of manually checking cabin availability 😅
+
+---
+
+**Happy cabin hunting! 🏔️⛰️🎿**
