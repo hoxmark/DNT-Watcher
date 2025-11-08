@@ -8,6 +8,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var isChecking = false
     private var lastCheckTime: Date?
     private var availabilityData: [String: CabinAvailability] = [:]
+    private var checkTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Request notification permissions
@@ -23,6 +24,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.performCheck()
         }
+
+        // Schedule periodic checks every hour (3600 seconds)
+        checkTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
+            print("Automatic hourly check triggered")
+            self?.performCheck()
+        }
+
+        print("Automatic checks scheduled: every hour")
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Clean up timer
+        checkTimer?.invalidate()
+        checkTimer = nil
     }
 
     private func setupMenuBar() {
