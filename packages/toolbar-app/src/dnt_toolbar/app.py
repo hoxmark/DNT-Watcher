@@ -201,12 +201,12 @@ class DNTToolbarApp(rumps.App):
         else:
             last_check_display = last_check
 
-        # Define colors
-        green_color = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.7, 0.0, 1.0)
-        red_color = NSColor.colorWithRed_green_blue_alpha_(0.9, 0.0, 0.0, 1.0)
-        yellow_color = NSColor.colorWithRed_green_blue_alpha_(0.9, 0.7, 0.0, 1.0)
-        blue_color = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.5, 1.0, 1.0)
-        gray_color = NSColor.colorWithRed_green_blue_alpha_(0.5, 0.5, 0.5, 1.0)
+        # Define colors - softer, more pleasant palette
+        green_color = NSColor.colorWithRed_green_blue_alpha_(0.2, 0.8, 0.3, 1.0)  # Vibrant green
+        red_color = NSColor.colorWithRed_green_blue_alpha_(1.0, 0.45, 0.45, 1.0)  # Soft coral/salmon
+        yellow_color = NSColor.colorWithRed_green_blue_alpha_(1.0, 0.75, 0.25, 1.0)  # Warm amber/gold
+        blue_color = NSColor.colorWithRed_green_blue_alpha_(0.2, 0.6, 1.0, 1.0)  # Bright sky blue
+        gray_color = NSColor.colorWithRed_green_blue_alpha_(0.6, 0.6, 0.6, 1.0)  # Lighter gray
 
         # Build beautifully formatted status text with colors
         status_lines = []
@@ -300,11 +300,11 @@ class DNTToolbarApp(rumps.App):
             )
         )
 
-        # Update menu bar icon based on weekend availability
+        # Update menu bar icon based on weekend availability with notification badge
         if status['weekends'] > 0:
-            self.title = "🏔✅"  # Green checkmark when weekends available
+            self.title = "🏔🔴"  # Red notification badge when weekends available!
         elif status['total_dates'] > 0:
-            self.title = "🏔📅"  # Calendar when dates available (but no weekends)
+            self.title = "🏔🟡"  # Yellow badge when dates available (but no weekends)
         else:
             self.title = "🏔"  # Just mountain when nothing available
 
