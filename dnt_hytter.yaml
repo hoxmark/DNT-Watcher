@@ -10,3 +10,7 @@ dnt_hytter:
   - navn: "Fuglemyrhytta"
     url: "https://hyttebestilling.dnt.no/hytte/101209"
     beskrivelse: "Nordmarka – moderne DNT-hytte med fantastisk utsikt over Oslofjorden. Perfekt for en helg nær byen."
+  
+  # - navn: "Abborhøgda"
+  #   url: "https://hyttebestilling.dnt.no/hytte/101201819"
+  #   beskrivelse: "DNT Finnskogen og Omegn"

@@ -44,6 +44,14 @@ uv.lock
 *.swo
 *~
 
+# Swift
+.build/
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+*.app
+
 # Project specific
 history/
+documentation/
 
