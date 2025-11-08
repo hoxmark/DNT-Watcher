@@ -143,6 +143,7 @@ open swift-toolbar/DNTWatcher.app
 - Click any cabin name to open booking page
 - **Automatic hourly checks** (runs in background)
 - Manual "Check Now" button (⌘R)
+- **"Open at Login"** toggle (starts automatically when you log in)
 - Initial check on launch
 
 **Menu Structure:**
@@ -159,6 +160,9 @@ open swift-toolbar/DNTWatcher.app
 │ 📊 3 weekends • 177 dates           │
 ├─────────────────────────────────────┤
 │ 🔄 Check Now              ⌘R        │
+├─────────────────────────────────────┤
+│ ✓ Open at Login                     │  ← Toggle
+├─────────────────────────────────────┤
 │ Quit DNT Watcher          ⌘Q        │
 └─────────────────────────────────────┘
 ```
