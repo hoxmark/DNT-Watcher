@@ -1,5 +1,6 @@
 import Cocoa
 import UserNotifications
+import ServiceManagement
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -65,8 +66,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Open at Login option
+        let loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLoginItem), keyEquivalent: "")
+        loginItem.target = self
+        loginItem.state = isLoginItemEnabled() ? .on : .off
+        menu.addItem(loginItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         // Quit option
-        let quitItem = NSMenuItem(title: "Quit", action: #selector(quitClicked), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit DNT Watcher", action: #selector(quitClicked), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
@@ -87,6 +96,43 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         NSWorkspace.shared.open(url)
+    }
+
+    @objc private func toggleLoginItem(_ sender: NSMenuItem) {
+        if #available(macOS 13.0, *) {
+            let service = SMAppService.mainApp
+
+            do {
+                if sender.state == .off {
+                    // Enable login item
+                    try service.register()
+                    sender.state = .on
+                    print("Login item enabled")
+                } else {
+                    // Disable login item
+                    try service.unregister()
+                    sender.state = .off
+                    print("Login item disabled")
+                }
+            } catch {
+                print("Failed to toggle login item: \(error)")
+
+                // Show alert to user
+                let alert = NSAlert()
+                alert.messageText = "Login Item Error"
+                alert.informativeText = "Failed to change login item setting: \(error.localizedDescription)"
+                alert.alertStyle = .warning
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
+        }
+    }
+
+    private func isLoginItemEnabled() -> Bool {
+        if #available(macOS 13.0, *) {
+            return SMAppService.mainApp.status == .enabled
+        }
+        return false
     }
 
     private func performCheck() {
