@@ -1,71 +1,95 @@
 # 🏔 DNT Watcher
 
-> Multi-layered cabin availability monitoring system with CLI, macOS menu bar app, and modular architecture!
+> Multi-layered cabin availability monitoring system with native Swift menu bar app, CLI, and modular architecture!
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Swift 5.9+](https://img.shields.io/badge/swift-5.9+-orange.svg)](https://swift.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![UV Workspace](https://img.shields.io/badge/uv-workspace-orange.svg)](https://docs.astral.sh/uv/)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
+[![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
 
 ## ✨ Features
 
-- 🏗️ **Modern Architecture**: UV Workspace with separated concerns (core, CLI, notification, toolbar)
-- 🎯 **Weekend-Focused**: Automatically detects full Friday-Sunday weekends
-- 🎨 **Beautiful CLI**: Colorful terminal output highlighting what matters most
-- 📱 **macOS Menu Bar App**: Always-visible status with manual check trigger
-- 🔔 **Smart Notifications**: Cross-platform alerts for new weekends/dates
-- 📊 **Multi-Cabin Monitoring**: Track multiple cabins via YAML configuration
-- 📈 **Change Detection**: Intelligent diffing between runs
-- ⚡ **DRY Principles**: Shared business logic, zero duplication
+- 🚀 **Native Swift Menu Bar App**: High-performance macOS status bar integration
+- 🎯 **Weekend-First UI**: Prioritizes full Friday-Sunday weekends at the top
+- 🆕 **NEW Status Tracking**: Highlights newly available weekends/Saturdays
+- 🔗 **One-Click Booking**: Clickable cabin names open booking pages
+- 📊 **Smart Icons**: Visual status indicators (🏔🆕 = new weekends!)
+- 🎨 **Beautiful CLI**: Colorful terminal output for scheduled checks
+- 🔔 **Native Notifications**: macOS notification center integration
+- 📈 **Change Detection**: Intelligent history-based diffing
+- 🏗️ **Modern Architecture**: UV Workspace + Swift Package Manager
 
 ## 🏗️ Architecture
 
-This project uses a **UV Workspace** pattern with four distinct packages:
+This project combines **Python UV Workspace** (for core business logic and CLI) with **native Swift** (for the menu bar app):
 
 ```
 DNT-Watcher/
-├── pyproject.toml              # Workspace root
-├── dnt_hytter.yaml             # Shared cabin configuration
-├── history/                    # Shared availability data
-├── packages/
+├── swift-toolbar/              # Native Swift menu bar app ⭐
+│   ├── Package.swift
+│   ├── Sources/DNTWatcher/
+│   └── build-app.sh
+├── packages/                   # Python workspace packages
 │   ├── core/                   # Business logic (API, analysis, config)
 │   ├── notification/           # Cross-platform notification layer
-│   ├── cli/                    # Beautiful terminal application
-│   └── toolbar-app/            # macOS menu bar application
-└── tests/                      # Workspace-level tests
+│   ├── cli/                    # Terminal application
+│   └── toolbar-app/            # Legacy Python toolbar (rumps)
+├── dnt_hytter.yaml            # Shared cabin configuration
+├── history/                    # Shared availability data
+└── tests/                      # Test suite
 ```
 
-### Package Overview
+### Application Overview
 
-#### 1. **Core Package** (`dnt-core`)
-Centralized business logic - the measurement engine:
-- **api.py**: DNT API client
-- **analysis.py**: Date extraction, weekend detection, diffing
-- **config.py**: YAML loading, cabin ID extraction
+#### 🌟 Swift Menu Bar App (Recommended)
+**Location:** `swift-toolbar/`
 
-#### 2. **Notification Package** (`dnt-notification`)
-Cross-platform notification layer:
-- **notify.py**: System notifications (macOS + fallback)
+The native macOS menu bar application with weekend-priority UI:
+- **AppDelegate.swift**: Menu bar integration & UI
+- **DNTAPIClient.swift**: API client
+- **AvailabilityAnalyzer.swift**: Weekend detection & diffing
+- **ConfigLoader.swift**: YAML configuration parsing
+- **HistoryManager.swift**: Change tracking
+- **NotificationManager.swift**: Native macOS notifications
 
-#### 3. **CLI Application** (`dnt-cli`)
-Beautiful command-line worker:
-- Colorful terminal output with `colorama`
-- Scheduled execution (hourly/cron)
-- Entry point: `dnt-watcher` command
+**Performance:**
+- 🚀 20x faster startup (<100ms vs 1-2s)
+- 💾 2x lower memory (37MB vs 80MB)
+- 📦 Self-contained (no Python runtime needed)
 
-#### 4. **Toolbar App** (`dnt-toolbar`)
-macOS menu bar service:
-- Persistent menu bar presence
-- Status display from latest run
-- Manual "Rerun Check" button
-- Entry point: `dnt-toolbar` command
+**UI Features:**
+- 🆕 NEW FULL WEEKENDS section (top priority)
+- 🆕 NEW SATURDAYS section
+- 🏔 ALL WEEKENDS with date ranges
+- 🔗 Clickable cabin names → open booking page
+- 📊 Smart status icons (🏔🆕, 🏔✨, 🏔✓, 🏔)
+
+#### 🐍 Python Packages
+
+**Core Package** (`dnt-core`)
+- API client for DNT booking system
+- Date extraction & weekend detection
+- Configuration management
+- History persistence
+
+**CLI Application** (`dnt-cli`)
+- Beautiful colorful terminal output
+- Scheduled execution via cron
+- Entry point: `uv run dnt-watcher`
+
+**Notification Package** (`dnt-notification`)
+- Cross-platform notification wrapper
+- macOS native + fallback for other platforms
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
-- [UV package manager](https://docs.astral.sh/uv/) - Install with: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- **macOS 13.0+** (for Swift menu bar app)
+- **Swift 5.9+** (comes with Xcode Command Line Tools)
+- **Python 3.11+** (for CLI)
+- **[UV package manager](https://docs.astral.sh/uv/)** - Install: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ### Installation
 
@@ -74,14 +98,13 @@ macOS menu bar service:
 git clone https://github.com/hoxmark/DNT-Watcher.git
 cd DNT-Watcher
 
-# Sync all workspace packages and dependencies
+# Sync Python packages (for CLI)
 uv sync
 
-# Run the CLI (single check)
-uv run dnt-watcher
-
-# Or launch the macOS toolbar app (persistent monitoring)
-uv run dnt-toolbar
+# Build Swift menu bar app
+cd swift-toolbar
+./build-app.sh
+cd ..
 ```
 
 ### Configuration
@@ -94,6 +117,10 @@ dnt_hytter:
     url: "https://hyttebestilling.dnt.no/hytte/101297"
     beskrivelse: "Østmarka – idyllisk ved Røyrivann"
 
+  - navn: "Skjennungsvolden"
+    url: "https://hyttebestilling.dnt.no/hytte/101233402"
+    beskrivelse: "Nordmarka – flott beliggenhet"
+
   - navn: "Fuglemyrhytta"
     url: "https://hyttebestilling.dnt.no/hytte/101209"
     beskrivelse: "Nordmarka – moderne DNT-hytte"
@@ -101,20 +128,61 @@ dnt_hytter:
 
 ## 📱 Usage
 
+### Swift Menu Bar App (Recommended)
+
+Launch the native macOS menu bar app:
+
+```bash
+open swift-toolbar/DNTWatcher.app
+```
+
+**Features:**
+- Appears as 🏔 icon in your menu bar
+- Click to see availability status
+- New weekends highlighted at top with 🆕 icon
+- Click any cabin name to open booking page
+- Manual "Check Now" button (⌘R)
+- Auto-check on launch
+
+**Menu Structure:**
+```
+┌─────────────────────────────────────┐
+│ 🆕 NEW FULL WEEKENDS!               │  ← Bold header
+│   🎉 Stallen: Nov 15 - Nov 17       │  ← Click to book!
+├─────────────────────────────────────┤
+│ 🏔 ALL WEEKENDS (3)                 │
+│ 🆕 Stallen: Nov15-17, Jan3-5        │  ← Click to book!
+│    Skjennungsvolden: Dec20-22       │  ← Click to book!
+├─────────────────────────────────────┤
+│ ⏱ Updated: 7:57 AM                  │
+│ 📊 3 weekends • 177 dates           │
+├─────────────────────────────────────┤
+│ 🔄 Check Now              ⌘R        │
+│ Quit DNT Watcher          ⌘Q        │
+└─────────────────────────────────────┘
+```
+
+**Status Icons:**
+- 🏔🆕 = **NEW WEEKENDS AVAILABLE!** (grab them fast!)
+- 🏔✨ = NEW SATURDAYS available
+- 🏔✓ = Has weekends (no new ones)
+- 🏔⏳ = Checking availability...
+- 🏔 = No weekends available
+
 ### CLI Mode
 
-Run once:
+Run a single check:
 ```bash
 uv run dnt-watcher
 ```
 
-The CLI provides beautiful, colorful output focused on weekend availability:
+The CLI provides colorful output focused on weekend availability:
 
 ```
 ============================================================
   🏔  DNT WATCHER - Cabin Availability Monitor  🏔
 ============================================================
-Monitoring 2 cabin(s)
+Monitoring 3 cabin(s)
 
 ━━━ Stallen (ID: 101297) ━━━
 
@@ -134,119 +202,75 @@ Monitoring 2 cabin(s)
 ============================================================
 ```
 
-### Toolbar App Mode
-
-**DNT Watcher offers TWO toolbar options!** 🎨
-
-| Option | Platform | Beauty | Best For |
-|--------|----------|--------|----------|
-| **rumps (Enhanced)** | macOS | ⭐⭐⭐ | Most users (recommended) |
-| **PyQt6** | Cross-platform | ⭐⭐⭐⭐ | Windows/Linux support |
-
-**Quick Start (rumps - recommended):**
-```bash
-# Setup (one-time)
-./setup_toolbar.sh
-
-# Launch
-uv run dnt-toolbar
-```
-
-**Try both:**
-```bash
-uv sync --all-packages
-
-uv run dnt-toolbar          # Enhanced rumps (colored text)
-uv run dnt-toolbar-qt       # PyQt6 (cross-platform)
-```
-
-**📖 See [TOOLBAR_OPTIONS.md](TOOLBAR_OPTIONS.md) for detailed comparison and screenshots!**
-
-Both toolbar apps provide:
-- 🏔 Menu bar icon with dynamic status
-- 📊 Beautiful formatted status display
-- 🔄 "Rerun Check Now" button
-- 🔔 System notifications
-
 ### Continuous Monitoring
 
-**Option 1: Use the Toolbar App (Recommended)**
+**Option 1: Menu Bar App (Recommended)**
 ```bash
-# Launch the menu bar app - stays running in background
-uv run dnt-toolbar
+# Launch once - stays running in background
+open swift-toolbar/DNTWatcher.app
 ```
-Then use "Rerun Check Now" whenever you want to manually check.
+Use "Check Now" (⌘R) whenever you want to manually refresh.
 
 **Option 2: Scheduled CLI Checks with Cron**
 ```bash
 # Add to crontab: Check every hour
 0 * * * * cd /path/to/DNT-Watcher && uv run dnt-watcher
 
-# Or check only on Saturday mornings (when new bookings often appear)
+# Or check only on Saturday mornings
 0 8 * * 6 cd /path/to/DNT-Watcher && uv run dnt-watcher
-```
-
-**Option 3: Run CLI in Continuous Mode**
-```bash
-# Create a simple runner script
-cat > run_continuous.py << 'EOF'
-from dnt_cli.run import run_continuous
-run_continuous(interval=3600)  # Check every hour
-EOF
-
-uv run python run_continuous.py
 ```
 
 ## 🎨 Design Principles
 
 ### The Weather Station Metaphor
 
-This architecture is like a sophisticated weather station:
-
-- **Core Package** = Centralized measurement engine (calculates conditions)
-- **CLI App** = Scheduled report generator (hourly logs)
-- **Notification Package** = Alarm bell (critical alerts)
-- **Toolbar App** = Dashboard display (always-on status + manual trigger)
+- **Core Package** = Measurement engine (Python business logic)
+- **Swift Menu Bar App** = Dashboard display (native UI, always visible)
+- **CLI App** = Scheduled reporter (hourly terminal checks)
+- **Notification Layer** = Alarm system (critical alerts)
 
 ### DRY Architecture
 
-All business logic lives in **one place** (`dnt-core`):
+**Python Core** handles all business logic:
 - ✅ API calls
 - ✅ Date analysis
 - ✅ Weekend detection
-- ✅ Data persistence
+- ✅ Configuration loading
+- ✅ History management
 
-The CLI and Toolbar apps are **thin presentation layers** that:
-- Import shared core logic
-- Add their own UI/UX layer
-- Never duplicate business logic
+**Swift App** provides native UI:
+- ✅ Menu bar integration
+- ✅ Native performance
+- ✅ macOS-native notifications
+- ✅ Weekend-priority display
+- ✅ Clickable booking links
 
 ## 🧪 Testing
 
-Run the test suite:
+Run the Python test suite:
 
 ```bash
 # Run all tests
 uv run python -m unittest tests/test_core.py -v
 
-# Or use pytest if you prefer
+# Or use pytest
 uv run pytest tests/ -v
 ```
 
 **Test coverage:**
 - ✅ Cabin ID extraction from URLs
-- ✅ API response parsing (empty, no availability, with availability)
-- ✅ Weekend detection (none, partial, complete, multiple)
+- ✅ API response parsing
+- ✅ Weekend detection algorithms
 - ✅ Configuration loading
 - ✅ Diff comparison logic
 
 **Manual Testing:**
 ```bash
-# Test CLI package
+# Test CLI
 uv run dnt-watcher
 
-# Test notification package
-uv run python -c "from dnt_notification import send_notification; send_notification('Test', 'It works!')"
+# Test Swift app
+open swift-toolbar/DNTWatcher.app
 
 # Test core package
 uv run python -c "from dnt_core import load_cabins; print(load_cabins())"
@@ -254,91 +278,77 @@ uv run python -c "from dnt_core import load_cabins; print(load_cabins())"
 
 ## 🔧 Development
 
-### Adding a New Application
+### Building the Swift App
 
-Create a new package in `packages/`:
+```bash
+cd swift-toolbar
 
-```toml
-# packages/new-app/pyproject.toml
-[project]
-name = "dnt-new-app"
-version = "1.0.0"
-dependencies = [
-    "dnt-core",           # Import core business logic
-    "dnt-notification",   # Import notification layer
-]
+# Build release version
+./build-app.sh
+
+# Or build debug version
+swift build
+
+# Run from command line
+.build/debug/DNTWatcher
 ```
 
-Then add to workspace:
-```toml
-# Root pyproject.toml
-[tool.uv.workspace]
-members = [
-    "packages/core",
-    "packages/notification",
-    "packages/cli",
-    "packages/toolbar-app",
-    "packages/new-app"  # Add here
-]
+### Swift App Architecture
+
+```swift
+AppDelegate
+  ├── ConfigLoader → Loads YAML via Yams
+  ├── DNTAPIClient → Fetches availability
+  ├── AvailabilityAnalyzer → Detects weekends
+  ├── HistoryManager → Tracks changes
+  └── NotificationManager → Shows alerts
 ```
 
-### Package Dependencies
+### Adding New Cabins
 
-```mermaid
-graph TD
-    CLI[CLI App] --> Core[Core Package]
-    CLI --> Notification[Notification Package]
-    Toolbar[Toolbar App] --> Core
-    Toolbar --> Notification
-    Core --> External[requests, pyyaml]
-    Notification --> System[OS Notification APIs]
+Edit `dnt_hytter.yaml` and add a new entry:
+
+```yaml
+dnt_hytter:
+  - navn: "New Cabin Name"
+    url: "https://hyttebestilling.dnt.no/hytte/CABIN_ID"
+    beskrivelse: "Description here"
 ```
+
+Both the Swift app and CLI will automatically pick up the new cabin.
 
 ## 📦 Package Details
 
-### dnt-core
+### Swift Menu Bar App
+**Location:** `swift-toolbar/`
+**Dependencies:** Yams (YAML parsing)
+**Platform:** macOS 13.0+
+**Build:** Swift Package Manager
+
+**Key Features:**
+- NSStatusItem integration
+- Native UNUserNotificationCenter
+- Weekend-first UI with NEW tracking
+- Clickable booking links
+- Background threading for API calls
+
+### Python Core Package
+**Package:** `dnt-core`
 **Dependencies:** `requests`, `pyyaml`
+**Platform:** Cross-platform
+
 **Exports:**
 - `get_availability(cabin_id, from_date, to_date)`
 - `extract_available_dates(availability)`
 - `find_available_weekends(dates)`
-- `save_result_as_json(result)`
-- `load_latest_files()`
-- `diff_lists(list1, list2)`
 - `load_cabins(config_file)`
 - `extract_cabin_id(url)`
 
-### dnt-notification
-**Dependencies:** None (stdlib only)
-**Exports:**
-- `send_notification(title, message)`
-
-### dnt-cli
+### Python CLI Package
+**Package:** `dnt-cli`
 **Dependencies:** `dnt-core`, `dnt-notification`, `colorama`
-**Entry Points:**
-- `dnt-watcher` - Run once
-- Python API: `run_continuous(interval)`
-
-### dnt-toolbar (Enhanced rumps)
-**Dependencies:** `dnt-core`, `dnt-notification`, `rumps`
-**Entry Points:**
-- `dnt-toolbar` - Launch menu bar app
-**Platform:** macOS only
-
-### dnt-toolbar-qt (PyQt6)
-**Dependencies:** `dnt-core`, `dnt-notification`, `PyQt6`
-**Entry Points:**
-- `dnt-toolbar-qt` - Launch cross-platform toolbar
-**Platform:** Cross-platform (macOS, Windows, Linux)
-
-## 🛠 Requirements
-
-- **Python 3.11+** - Required for all packages
-- **[UV package manager](https://docs.astral.sh/uv/)** - Required for workspace management
-- **macOS** - Recommended for full feature set (notifications + toolbar app work best)
-  - Linux/Windows: CLI works, notifications have console fallback, toolbar app unavailable
-
-All package dependencies are automatically managed by UV via the workspace configuration.
+**Entry Point:** `uv run dnt-watcher`
+**Platform:** Cross-platform
 
 ## 📝 API Reference
 
@@ -370,54 +380,61 @@ GET https://hyttebestilling.dnt.no/api/booking/availability-calendar
 }
 ```
 
-## 🎯 Why This Architecture?
+## 🎯 Why Swift + Python?
 
-1. **Modularity**: Each package has a single responsibility
-2. **Reusability**: Core logic used by both CLI and Toolbar
-3. **Testability**: Business logic isolated and easily tested
-4. **Scalability**: Easy to add new applications (web UI, mobile, etc.)
-5. **Maintainability**: Change once, benefit everywhere
+**Swift for the UI:**
+- ✅ Native macOS performance (20x faster startup)
+- ✅ Proper app bundle with Info.plist
+- ✅ Native notifications without hacks
+- ✅ Lower memory footprint
+- ✅ Self-contained distribution
+
+**Python for Business Logic:**
+- ✅ Rapid development
+- ✅ Rich ecosystem (requests, pyyaml)
+- ✅ Cross-platform CLI
+- ✅ Easy testing
+- ✅ Reusable core logic
 
 ## 🔧 Troubleshooting
 
-### Toolbar App: "Failed to setup the notification center"
+### Swift App Won't Launch
 
-**Problem:**
-```
-RuntimeError: Failed to setup the notification center.
-This issue occurs when the "Info.plist" file cannot be found...
-```
-
-**Solution:**
-Run the setup script:
+Make sure you've built the app:
 ```bash
-./setup_toolbar.sh
+cd swift-toolbar
+./build-app.sh
 ```
 
-Or manually create the Info.plist:
-```bash
-/usr/libexec/PlistBuddy -c 'Add :CFBundleIdentifier string "io.hoxmark.dnt-watcher"' .venv/bin/Info.plist
-```
+### Config File Not Found
 
-This is a one-time setup required for macOS notifications to work.
+The Swift app searches multiple locations for `dnt_hytter.yaml`:
+- Current working directory
+- Parent directories (up to 8 levels)
+- Bundle resource path
+
+Make sure you run the app from the project root or its parent directory.
+
+### No Notifications
+
+Check macOS notification permissions:
+1. System Settings → Notifications
+2. Find "DNTWatcher"
+3. Enable "Allow Notifications"
 
 ### UV Sync Issues
 
-If you get dependency resolution errors:
+If dependency resolution fails:
 ```bash
-# Remove lock file and resync
 rm uv.lock
-uv sync --all-packages
-```
-
-### CLI Shows No Colors
-
-Make sure colorama is installed:
-```bash
 uv sync
 ```
 
-If still no colors, your terminal may not support ANSI codes.
+## 📚 Documentation
+
+- **[Swift Toolbar Evaluation](docs/swift-toolbar-evaluation.md)** - Performance analysis & comparison
+- **[Swift V2 Features](docs/swift-toolbar-v2-features.md)** - Weekend-priority UI details
+- **[CLAUDE.md](CLAUDE.md)** - Project overview for Claude Code
 
 ## 📝 License
 
@@ -426,6 +443,7 @@ MIT License - feel free to use and modify!
 ## 🙏 Acknowledgments
 
 - Built with [Claude Code](https://claude.com/claude-code)
+- Swift Package Manager for dependency management
 - UV Workspace pattern from [Astral](https://astral.sh/)
 - Uses the DNT Hyttebestilling API
 - Inspired by the frustration of manually checking cabin availability 😅
