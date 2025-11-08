@@ -16,7 +16,7 @@
 - 🔗 **One-Click Booking**: Clickable cabin names open booking pages
 - 📊 **Smart Icons**: Visual status indicators (🏔🆕 = new weekends!)
 - 🎨 **Beautiful CLI**: Colorful terminal output for scheduled checks
-- 🔔 **Native Notifications**: macOS notification center integration
+- 🔔 **Smart Notifications**: User-friendly permission flow with welcome notification
 - 📈 **Change Detection**: Intelligent history-based diffing
 - 🏗️ **Modern Architecture**: UV Workspace + Swift Package Manager
 
@@ -32,9 +32,9 @@ DNT-Watcher/
 │   └── build-app.sh
 ├── packages/                   # Python workspace packages
 │   ├── core/                   # Business logic (API, analysis, config)
-│   ├── notification/           # Cross-platform notification layer
+│   ├── notification/           # Cross-platform notification layer (CLI only)
 │   ├── cli/                    # Terminal application
-│   └── toolbar-app/            # Legacy Python toolbar (rumps)
+│   └── toolbar-app/            # Legacy Python toolbar (no notifications)
 ├── dnt_hytter.yaml            # Shared cabin configuration
 ├── history/                    # Shared availability data
 └── tests/                      # Test suite
@@ -142,8 +142,10 @@ open swift-toolbar/DNTWatcher.app
 - New weekends highlighted at top with 🆕 icon
 - Click any cabin name to open booking page
 - **Automatic hourly checks** (runs in background)
+- **Smart notifications** for new weekends/dates (asks permission on first launch)
 - Manual "Check Now" button (⌘R)
 - **"Open at Login"** toggle (starts automatically when you log in)
+- **Settings window** to manage cabins with images (⌘,)
 - Initial check on launch
 
 **Menu Structure:**
@@ -420,12 +422,27 @@ The Swift app searches multiple locations for `dnt_hytter.yaml`:
 
 Make sure you run the app from the project root or its parent directory.
 
-### No Notifications
+### Notifications
 
-Check macOS notification permissions:
-1. System Settings → Notifications
-2. Find "DNTWatcher"
-3. Enable "Allow Notifications"
+**First Launch:**
+On first launch, DNT Watcher will request notification permissions using the macOS system prompt. Click **"Allow"** to receive alerts when:
+- New full weekends become available
+- New Saturday dates appear
+- Any new dates are added
+
+If you allow notifications, you'll receive a welcome notification confirming it works: "DNT Watcher Active 🏔"
+
+**Settings Window:**
+You can check and manage notification permissions directly in the Settings window (⌘,):
+- **Green checkmark** = Notifications enabled
+- **Orange bell** = Notifications disabled (click "Open Settings" to enable)
+- **Blue bell** = Not configured (click "Enable" to allow)
+
+**System Settings:**
+You can also change notification settings in:
+1. **System Settings** → **Notifications**
+2. Find **"DNTWatcher"** in the list
+3. Toggle **"Allow Notifications"** on/off
 
 ### UV Sync Issues
 

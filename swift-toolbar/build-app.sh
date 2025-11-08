@@ -28,6 +28,9 @@ cp .build/release/DNTWatcher "$MACOS_DIR/"
 # Copy Info.plist
 cp Resources/Info.plist "$CONTENTS_DIR/"
 
+# Copy icon
+cp Resources/AppIcon.icns "$RESOURCES_DIR/"
+
 # Create PkgInfo
 echo "APPL????" > "$CONTENTS_DIR/PkgInfo"
 

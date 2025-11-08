@@ -33,7 +33,7 @@ from dnt_core import (
     load_latest_files,
     save_result_as_json,
 )
-from dnt_notification import send_notification
+# Notifications disabled - use Swift app for notification support
 
 
 class DNTToolbarApp(rumps.App):
@@ -311,12 +311,7 @@ class DNTToolbarApp(rumps.App):
     @rumps.clicked("🔄 Rerun Check Now")
     def rerun_check(self, _):
         """Manually trigger a full availability check."""
-        # Show notification that check is starting
-        rumps.notification(
-            title="🏔 DNT Watcher",
-            subtitle="🔍 Starting manual check...",
-            message="This may take a few moments"
-        )
+        print("Starting manual check...")
 
         # Run the check in a background thread to avoid blocking the UI
         def run_check():
@@ -324,18 +319,9 @@ class DNTToolbarApp(rumps.App):
                 self._perform_check()
                 # Update the display after check completes
                 self.update_status_display()
-                rumps.notification(
-                    title="🏔 DNT Watcher",
-                    subtitle="✅ Check complete!",
-                    message="Status has been updated"
-                )
+                print("Check complete! Status updated.")
             except Exception as e:
                 print(f"Error during check: {e}")
-                rumps.notification(
-                    title="🏔 DNT Watcher",
-                    subtitle="❌ Check failed",
-                    message=str(e)
-                )
 
         thread = threading.Thread(target=run_check)
         thread.daemon = True
@@ -383,15 +369,11 @@ class DNTToolbarApp(rumps.App):
                     new_weekends = find_available_weekends(added)
                     if new_weekends:
                         weekend_str = ", ".join([f.strftime("%Y-%m-%d") for f, _ in new_weekends])
-                        send_notification(
-                            "DNT Watcher - NEW FULL WEEKENDS!",
-                            f"{cabin_name}: {len(new_weekends)} weekend(s)! {weekend_str}",
-                        )
+                        print(f"NEW FULL WEEKENDS! {cabin_name}: {len(new_weekends)} weekend(s)! {weekend_str}")
+                        # Notifications disabled - use Swift app for notifications
                     else:
-                        send_notification(
-                            "DNT Watcher",
-                            f"{cabin_name}: {len(added)} new date(s) available"
-                        )
+                        print(f"New dates: {cabin_name}: {len(added)} new date(s) available")
+                        # Notifications disabled - use Swift app for notifications
 
     @rumps.clicked("❌ Quit")
     def quit_app(self, _):

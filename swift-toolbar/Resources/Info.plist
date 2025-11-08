@@ -6,8 +6,10 @@
     <string>en</string>
     <key>CFBundleExecutable</key>
     <string>DNTWatcher</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>io.hoxmark.dnt-watcher</string>
+    <string>io.hoxmark.DNTWatcher</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>

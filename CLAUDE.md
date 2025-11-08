@@ -51,8 +51,14 @@ DNT-Watcher/
 │   │   ├── AvailabilityAnalyzer.swift  # Weekend detection & diffing
 │   │   ├── ConfigLoader.swift  # YAML config parsing (via Yams)
 │   │   ├── HistoryManager.swift # Change tracking
-│   │   └── NotificationManager.swift # Native notifications
-│   ├── Resources/Info.plist    # App bundle metadata
+│   │   ├── NotificationManager.swift # Native notifications
+│   │   ├── CabinManager.swift  # Cabin list management (UserDefaults + YAML)
+│   │   ├── CabinModel.swift    # Cabin data model (Codable)
+│   │   ├── SettingsView.swift  # SwiftUI settings window
+│   │   └── ImageFetcher.swift  # Fetches cabin images from booking pages
+│   ├── Resources/
+│   │   ├── Info.plist          # App bundle metadata (bundle ID: io.hoxmark.DNTWatcher)
+│   │   └── AppIcon.icns        # App icon (mountain symbol)
 │   ├── build-app.sh            # Build script (creates .app bundle)
 │   └── DNTWatcher.app          # Built application (gitignored)
 ├── packages/                   # Python workspace packages
@@ -200,11 +206,52 @@ Native macOS notifications:
 - Immediate delivery
 - No AppleScript hacks required
 
+#### CabinManager.swift
+ObservableObject for cabin list management:
+- `loadCabins()`: Load from UserDefaults (primary) or YAML (fallback)
+- `saveCabins()`: Persist to UserDefaults
+- `addCabin()`, `updateCabin()`, `deleteCabin()`, `toggleCabin()`: CRUD operations
+- `getEnabledCabins()`: Returns enabled cabins in format for availability checks
+- `fetchMissingImages()`: Background image fetching for cabins
+- Storage: UserDefaults with YAML backward compatibility
+
+#### CabinModel.swift
+Codable data model:
+- `id: UUID`: Unique identifier
+- `name, url, description, isEnabled`: Cabin properties
+- `imageURL: String?`: Cached cabin image URL
+- `cabinId`: Computed property extracting ID from URL
+
+#### SettingsView.swift
+SwiftUI settings window (⌘,):
+- Cabin list with 60x60 image thumbnails (AsyncImage)
+- Add/Edit/Delete cabin functionality
+- Enable/disable toggles for each cabin
+- Notification permission management UI
+- Real-time validation
+- Auto-refresh on window open
+
+#### ImageFetcher.swift
+Fetches cabin images from booking pages:
+- `fetchImageURL(for:)`: Async web scraping
+- Extracts first Cloudinary image URL via regex
+- Pattern: `https://res.cloudinary.com/ntb/image/upload/...`
+- Singleton pattern for efficiency
+
 **UI Features:**
 - 🆕 NEW FULL WEEKENDS section (top priority when available)
 - 🆕 NEW SATURDAYS section (new Saturday-only availability)
 - 🏔 ALL WEEKENDS section with date ranges
 - Clickable cabin names → open booking page via NSWorkspace
+- 🎨 Mountain app icon (generated programmatically)
+- ⚙️ Settings window (⌘,) with:
+  - Cabin image thumbnails
+  - Add/Edit/Delete cabins
+  - Notification permission toggle
+  - "Open at Login" toggle
+- 🔔 Smart notification permission flow (macOS system prompt)
+- 🔄 Automatic hourly checks
+- ⏰ Manual "Check Now" (⌘R)
 - Smart status icons:
   - 🏔🆕 = NEW weekends available
   - 🏔✨ = NEW Saturdays available
@@ -224,17 +271,19 @@ cd swift-toolbar
 open DNTWatcher.app
 ```
 
-### 5. Legacy Toolbar App (`dnt-toolbar`)
+### 5. Legacy Toolbar App (`dnt-toolbar`) - DEPRECATED
 
 **Location:** `packages/toolbar-app/src/dnt_toolbar/`
 
-**Purpose:** macOS menu bar application for persistent monitoring.
+**Purpose:** Legacy Python-based macOS menu bar application (replaced by Swift app).
 
-**Dependencies:** `dnt-core`, `dnt-notification`, `rumps`
+**Dependencies:** `dnt-core`, `rumps` (no longer uses `dnt-notification`)
 
 **Entry Point:** `dnt-toolbar` command
 
 **Platform:** macOS only
+
+**Status:** ⚠️ DEPRECATED - Use Swift app for better performance and notifications
 
 **Modules:**
 
@@ -250,6 +299,13 @@ open DNTWatcher.app
 - Status menu item: Shows last check time, total dates, weekend count, cabin list
 - "Rerun Check Now" button: Manual trigger
 - Background threading: Prevents UI blocking
+
+**Limitations:**
+- ❌ No notifications (removed to avoid conflicts with Swift app)
+- ❌ Slower startup (Python runtime)
+- ❌ No settings UI
+- ❌ No cabin images
+- ⚠️ Recommended to use Swift app instead
 
 ## Configuration
 

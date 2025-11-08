@@ -1,11 +1,27 @@
 #!/bin/bash
-# Setup script for DNT Toolbar App (macOS)
-# This fixes the macOS notification center issue with rumps
+# DEPRECATED: This script is for the legacy Python toolbar app.
+# Please use the Swift toolbar app instead: swift-toolbar/DNTWatcher.app
+#
+# To build and run the Swift app:
+#   cd swift-toolbar
+#   ./build-app.sh
+#   open DNTWatcher.app
 
 set -e
 
-echo "🏔 Setting up DNT Toolbar App for macOS..."
+echo "⚠️  DEPRECATED: Python toolbar app"
 echo ""
+echo "This script sets up the legacy Python toolbar app (using rumps)."
+echo "We recommend using the native Swift app instead for better performance."
+echo ""
+echo "Swift app location: swift-toolbar/DNTWatcher.app"
+echo ""
+read -p "Continue with Python toolbar setup? (y/N) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Setup cancelled. Use the Swift app instead!"
+    exit 0
+fi
 
 # Check if we're on macOS
 if [[ "$OSTYPE" != "darwin"* ]]; then
@@ -24,21 +40,11 @@ fi
 echo "📦 Syncing workspace packages..."
 uv sync --all-packages
 
-# Create Info.plist for notifications
-PLIST_PATH=".venv/bin/Info.plist"
-echo "📝 Setting up notification permissions..."
-
-if [ -f "$PLIST_PATH" ]; then
-    echo "   Info.plist already exists"
-else
-    /usr/libexec/PlistBuddy -c 'Add :CFBundleIdentifier string "io.hoxmark.dnt-watcher"' "$PLIST_PATH"
-    echo "   ✅ Created $PLIST_PATH"
-fi
-
 echo ""
 echo "🎉 Setup complete!"
 echo ""
 echo "You can now run:"
 echo "  uv run dnt-toolbar"
 echo ""
-echo "The app will appear in your menu bar with a 🏔 icon."
+echo "Note: The Python toolbar does NOT support notifications."
+echo "For notifications, use the Swift app: swift-toolbar/DNTWatcher.app"

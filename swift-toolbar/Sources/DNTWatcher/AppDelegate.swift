@@ -1,6 +1,7 @@
 import Cocoa
 import UserNotifications
 import ServiceManagement
+import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -10,16 +11,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastCheckTime: Date?
     private var availabilityData: [String: CabinAvailability] = [:]
     private var checkTimer: Timer?
+    private var cabinManager = CabinManager()
+    private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Request notification permissions
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
-            if let error = error {
-                print("Error requesting notification permissions: \(error)")
-            }
-        }
-
         setupMenuBar()
+
+        // Request notification permissions with user-friendly flow
+        requestNotificationPermissions()
 
         // Perform initial check after a short delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -33,6 +32,65 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         print("Automatic checks scheduled: every hour")
+    }
+
+    private func requestNotificationPermissions() {
+        // Check current authorization status
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                if settings.authorizationStatus == .notDetermined {
+                    // First time - request system notification permission (triggers macOS prompt)
+                    self.requestSystemNotificationPermission()
+                } else if settings.authorizationStatus == .authorized {
+                    // Already authorized - send welcome notification once
+                    let hasSeenWelcome = UserDefaults.standard.bool(forKey: "hasSeenWelcomeNotification")
+                    if !hasSeenWelcome {
+                        self.sendWelcomeNotification()
+                        UserDefaults.standard.set(true, forKey: "hasSeenWelcomeNotification")
+                    }
+                }
+            }
+        }
+    }
+
+    private func requestSystemNotificationPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if let error = error {
+                print("Error requesting notification permissions: \(error)")
+                return
+            }
+
+            if granted {
+                print("Notification permissions granted")
+                UserDefaults.standard.set(true, forKey: "hasSeenWelcomeNotification")
+                DispatchQueue.main.async {
+                    self.sendWelcomeNotification()
+                }
+            } else {
+                print("Notification permissions denied by user")
+            }
+        }
+    }
+
+    private func sendWelcomeNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "DNT Watcher Active 🏔"
+        content.body = "You'll be notified when new cabin availability appears. Happy cabin hunting!"
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        )
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error sending welcome notification: \(error)")
+            } else {
+                print("Welcome notification sent")
+            }
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -65,6 +123,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(checkItem)
 
         menu.addItem(NSMenuItem.separator())
+
+        // Settings option
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
 
         // Open at Login option
         let loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLoginItem), keyEquivalent: "")
@@ -135,6 +198,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return false
     }
 
+    @objc private func showSettings() {
+        if let existingWindow = settingsWindow {
+            existingWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        // Create SwiftUI settings view
+        let settingsView = SettingsView(cabinManager: cabinManager)
+        let hostingController = NSHostingController(rootView: settingsView)
+
+        // Create window
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "DNT Watcher Settings"
+        window.styleMask = [.titled, .closable]
+        window.center()
+        window.setFrameAutosaveName("SettingsWindow")
+
+        // Show window
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+
+        settingsWindow = window
+
+        // Clear reference when window closes
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            self?.settingsWindow = nil
+            // Reload cabins after settings window closes
+            self?.cabinManager.loadCabins()
+        }
+    }
+
     private func performCheck() {
         guard !isChecking else {
             print("Check already in progress")
@@ -157,9 +256,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func runAvailabilityCheck() {
-        let configLoader = ConfigLoader()
-        guard let cabins = configLoader.loadCabins() else {
-            print("Failed to load cabins configuration")
+        let cabins = cabinManager.getEnabledCabins()
+
+        if cabins.isEmpty {
+            print("No enabled cabins to check")
             return
         }
 
@@ -397,6 +497,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(checkItem)
 
         menu.addItem(NSMenuItem.separator())
+
+        // Settings option
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
 
         // Open at Login option
         let loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLoginItem), keyEquivalent: "")
