@@ -141,8 +141,9 @@ open swift-toolbar/DNTWatcher.app
 - Click to see availability status
 - New weekends highlighted at top with 🆕 icon
 - Click any cabin name to open booking page
+- **Automatic hourly checks** (runs in background)
 - Manual "Check Now" button (⌘R)
-- Auto-check on launch
+- Initial check on launch
 
 **Menu Structure:**
 ```
@@ -209,7 +210,7 @@ Monitoring 3 cabin(s)
 # Launch once - stays running in background
 open swift-toolbar/DNTWatcher.app
 ```
-Use "Check Now" (⌘R) whenever you want to manually refresh.
+The app automatically checks every hour. You can also use "Check Now" (⌘R) to manually refresh anytime.
 
 **Option 2: Scheduled CLI Checks with Cron**
 ```bash
