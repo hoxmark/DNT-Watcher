@@ -16,6 +16,13 @@ class NotificationManager {
     }
 
     func sendNotification(title: String, body: String) {
+        // Check if notifications are enabled in settings
+        let notificationsEnabled = UserDefaults.standard.object(forKey: "notificationsEnabled") as? Bool ?? true
+        guard notificationsEnabled else {
+            print("Notifications disabled in settings, skipping: \(title)")
+            return
+        }
+
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body

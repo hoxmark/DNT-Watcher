@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct CabinListView: View {
     @Environment(\.modelContext) private var modelContext
@@ -7,6 +8,12 @@ struct CabinListView: View {
     @State private var availabilityData: [UUID: CabinAvailability] = [:]
     @State private var isLoading = false
     @State private var showingSettings = false
+    @State private var errorMessage: String?
+    @State private var showingError = false
+
+    // Haptic feedback generators
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+    private let notificationFeedback = UINotificationFeedbackGenerator()
 
     var body: some View {
         NavigationStack {
@@ -28,6 +35,7 @@ struct CabinListView: View {
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
+                        impactFeedback.impactOccurred()
                         Task {
                             await checkAllCabins()
                         }
@@ -42,6 +50,13 @@ struct CabinListView: View {
             }
             .refreshable {
                 await checkAllCabins()
+            }
+            .alert("Error", isPresented: $showingError, presenting: errorMessage) { _ in
+                Button("OK") {
+                    errorMessage = nil
+                }
+            } message: { message in
+                Text(message)
             }
             .task {
                 // Populate default cabins on first launch
@@ -105,6 +120,9 @@ struct CabinListView: View {
 
         let apiClient = DNTAPIClient()
         let analyzer = AvailabilityAnalyzer()
+        var hasErrors = false
+        var errorCabins: [String] = []
+        var hasNewWeekends = false
 
         for cabin in cabins where cabin.isEnabled {
             do {
@@ -126,6 +144,11 @@ struct CabinListView: View {
                 // Find new weekends and new Saturdays
                 let newWeekendsDetected = findNewWeekends(in: addedDates, analyzer: analyzer)
                 let newSaturdays = findNewSaturdays(in: addedDates, existingWeekends: newWeekendsDetected)
+
+                // Track if we found new weekends for haptic feedback
+                if !newWeekendsDetected.isEmpty {
+                    hasNewWeekends = true
+                }
 
                 // Send notifications
                 await sendNotifications(
@@ -153,6 +176,29 @@ struct CabinListView: View {
 
             } catch {
                 print("Error fetching availability for \(cabin.name): \(error)")
+                hasErrors = true
+                errorCabins.append(cabin.name)
+            }
+        }
+
+        // Trigger haptic feedback based on results
+        await MainActor.run {
+            if hasErrors {
+                notificationFeedback.notificationOccurred(.error)
+            } else if hasNewWeekends {
+                notificationFeedback.notificationOccurred(.success)
+            }
+        }
+
+        // Show error alert if any cabin checks failed
+        if hasErrors {
+            await MainActor.run {
+                if errorCabins.count == 1 {
+                    errorMessage = "Kunne ikke sjekke tilgjengelighet for \(errorCabins[0]). Kontroller internettforbindelsen."
+                } else {
+                    errorMessage = "Kunne ikke sjekke tilgjengelighet for \(errorCabins.count) hytter. Kontroller internettforbindelsen."
+                }
+                showingError = true
             }
         }
 

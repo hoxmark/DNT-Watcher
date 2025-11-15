@@ -7,6 +7,27 @@ struct SettingsView: View {
     @Query(sort: \Cabin.name) private var cabins: [Cabin]
 
     @State private var showingAddCabin = false
+    @State private var notificationsEnabled = true
+    @State private var checkInterval: CheckInterval = .hourly
+    @State private var showingClearHistoryAlert = false
+
+    enum CheckInterval: String, CaseIterable, Identifiable {
+        case hourly = "Every Hour"
+        case twoHours = "Every 2 Hours"
+        case fourHours = "Every 4 Hours"
+        case sixHours = "Every 6 Hours"
+
+        var id: String { rawValue }
+
+        var seconds: TimeInterval {
+            switch self {
+            case .hourly: return 3600
+            case .twoHours: return 7200
+            case .fourHours: return 14400
+            case .sixHours: return 21600
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -35,6 +56,33 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Notifications") {
+                    Toggle("Enable Notifications", isOn: $notificationsEnabled)
+                    Text("Receive alerts when new availability is found")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section("Check Interval") {
+                    Picker("Frequency", selection: $checkInterval) {
+                        ForEach(CheckInterval.allCases) { interval in
+                            Text(interval.rawValue).tag(interval)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    Text("How often to check for availability in the background")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section("Data") {
+                    Button(role: .destructive) {
+                        showingClearHistoryAlert = true
+                    } label: {
+                        Label("Clear History", systemImage: "trash")
+                    }
+                }
+
                 Section("About") {
                     LabeledContent("Version", value: "1.0")
                     LabeledContent("Platform", value: "iOS")
@@ -52,12 +100,55 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAddCabin) {
                 AddCabinView()
             }
+            .alert("Clear History", isPresented: $showingClearHistoryAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Clear", role: .destructive) {
+                    clearHistory()
+                }
+            } message: {
+                Text("This will delete all availability history. You will see all availability as 'NEW' on the next check.")
+            }
+            .onAppear {
+                loadSettings()
+            }
+            .onChange(of: notificationsEnabled) { _, newValue in
+                UserDefaults.standard.set(newValue, forKey: "notificationsEnabled")
+                if newValue {
+                    Task {
+                        _ = await NotificationManager.shared.requestPermission()
+                    }
+                }
+            }
+            .onChange(of: checkInterval) { _, newValue in
+                UserDefaults.standard.set(newValue.rawValue, forKey: "checkInterval")
+            }
         }
     }
 
     private func deleteCabins(at offsets: IndexSet) {
         for index in offsets {
             modelContext.delete(cabins[index])
+        }
+    }
+
+    private func clearHistory() {
+        let descriptor = FetchDescriptor<AvailabilityHistory>()
+        if let allHistory = try? modelContext.fetch(descriptor) {
+            for history in allHistory {
+                modelContext.delete(history)
+            }
+            try? modelContext.save()
+        }
+    }
+
+    private func loadSettings() {
+        // Load notifications preference (default: true)
+        notificationsEnabled = UserDefaults.standard.object(forKey: "notificationsEnabled") as? Bool ?? true
+
+        // Load check interval (default: hourly)
+        if let intervalString = UserDefaults.standard.string(forKey: "checkInterval"),
+           let interval = CheckInterval.allCases.first(where: { $0.rawValue == intervalString }) {
+            checkInterval = interval
         }
     }
 }

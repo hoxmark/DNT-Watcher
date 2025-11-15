@@ -88,7 +88,7 @@ struct CabinDetailView: View {
                 }
             }
             .padding()
-            .background(.green.opacity(0.2))
+            .background(Color.green.opacity(0.15))
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
@@ -108,7 +108,7 @@ struct CabinDetailView: View {
                 }
             }
             .padding()
-            .background(.green.opacity(0.1))
+            .background(Color.green.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
@@ -222,7 +222,7 @@ struct DateChip: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .background(.blue.opacity(0.1))
+        .background(Color.blue.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

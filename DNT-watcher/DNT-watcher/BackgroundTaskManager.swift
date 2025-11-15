@@ -22,12 +22,25 @@ class BackgroundTaskManager {
         request.requiresNetworkConnectivity = true
         request.requiresExternalPower = false
 
-        // Run approximately every hour
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 3600) // 1 hour
+        // Load check interval from settings (default: 1 hour)
+        let intervalString = UserDefaults.standard.string(forKey: "checkInterval") ?? "Every Hour"
+        let interval: TimeInterval
+        switch intervalString {
+        case "Every 2 Hours":
+            interval = 7200
+        case "Every 4 Hours":
+            interval = 14400
+        case "Every 6 Hours":
+            interval = 21600
+        default:
+            interval = 3600 // Every Hour
+        }
+
+        request.earliestBeginDate = Date(timeIntervalSinceNow: interval)
 
         do {
             try BGTaskScheduler.shared.submit(request)
-            print("Background refresh scheduled for ~1 hour from now")
+            print("Background refresh scheduled for ~\(Int(interval/3600)) hour(s) from now")
         } catch {
             print("Failed to schedule background refresh: \(error)")
         }
