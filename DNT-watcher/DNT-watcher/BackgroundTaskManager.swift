@@ -174,14 +174,10 @@ class BackgroundTaskManager {
     }
 
     private func formatWeekend(_ weekend: Weekend) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d MMM"
-        return formatter.string(from: weekend.friday)
+        return weekend.friday.norwegianShort
     }
 
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d MMM"
-        return formatter.string(from: date)
+        return date.norwegianShort
     }
 }

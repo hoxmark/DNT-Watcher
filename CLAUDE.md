@@ -464,6 +464,10 @@ iOS notification manager:
   - Runs even when app is closed
   - Sends notifications for new availability
   - Self-rescheduling background tasks
+- 🇳🇴 Norwegian date formatting:
+  - Month names in Norwegian (nov, des, jan, etc.)
+  - "Fre - Søn" for weekends
+  - Natural Norwegian date displays throughout
 - 🖼️ Cabin images with AsyncImage
 - ⚙️ In-app settings for cabin management
 - 🔃 Pull-to-refresh for manual checks
@@ -492,8 +496,8 @@ iOS notification manager:
 - Widget support for quick glance at availability
 - Share extension for adding cabins from Safari
 - Dark mode optimization
-- Norwegian date formatting (Nov → nov)
 - iPad optimized layout
+- Localization (full app in Norwegian/English)
 
 ## Configuration
 

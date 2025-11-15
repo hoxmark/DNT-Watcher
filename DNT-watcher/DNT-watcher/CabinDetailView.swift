@@ -171,10 +171,10 @@ struct WeekendRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(weekend.friday.formatted(date: .abbreviated, time: .omitted))
+                Text(weekend.friday.norwegianShort)
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                Text("Fri - Sun")
+                Text("Fre - Søn")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -204,12 +204,19 @@ struct WeekendRow: View {
 struct DateChip: View {
     let date: Date
 
+    private var norwegianMonthFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "nb_NO")
+        formatter.dateFormat = "MMM"
+        return formatter
+    }
+
     var body: some View {
         VStack(spacing: 4) {
-            Text(date.formatted(.dateTime.day()))
+            Text("\(Calendar.current.component(.day, from: date))")
                 .font(.title3)
                 .fontWeight(.semibold)
-            Text(date.formatted(.dateTime.month(.abbreviated)))
+            Text(norwegianMonthFormatter.string(from: date))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
