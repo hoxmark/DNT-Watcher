@@ -12,7 +12,12 @@ struct CabinDetailView: View {
                 // Cabin header with image
                 cabinHeader
 
-                // Weekends section
+                // NEW FULL WEEKENDS section (highest priority)
+                if let availability = availability, !availability.newWeekends.isEmpty {
+                    newWeekendsSection(availability.newWeekends)
+                }
+
+                // All Weekends section
                 if let availability = availability, !availability.weekends.isEmpty {
                     weekendsSection(availability.weekends)
                 }
@@ -60,6 +65,31 @@ struct CabinDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    private func newWeekendsSection(_ weekends: [Weekend]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundStyle(.white)
+                Text("🆕 NEW FULL WEEKENDS!")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.green)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(weekends, id: \.friday) { weekend in
+                    WeekendRow(weekend: weekend, isNew: true)
+                }
+            }
+            .padding()
+            .background(.green.opacity(0.2))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 
@@ -136,6 +166,7 @@ struct CabinDetailView: View {
 
 struct WeekendRow: View {
     let weekend: Weekend
+    var isNew: Bool = false
 
     var body: some View {
         HStack {
@@ -148,8 +179,22 @@ struct WeekendRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
+            if isNew {
+                HStack(spacing: 4) {
+                    Image(systemName: "sparkles")
+                    Text("NEW")
+                        .fontWeight(.bold)
+                }
+                .font(.caption)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.green)
+                .clipShape(Capsule())
+            } else {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            }
         }
         .padding(.vertical, 4)
     }

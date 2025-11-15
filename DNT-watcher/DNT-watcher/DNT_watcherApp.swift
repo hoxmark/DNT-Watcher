@@ -13,6 +13,7 @@ struct DNT_watcherApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Cabin.self,
+            AvailabilityHistory.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

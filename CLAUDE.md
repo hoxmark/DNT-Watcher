@@ -351,13 +351,15 @@ Successfully reused ~80% of the macOS Swift code with iOS-specific adaptations.
 
 **iOS-Specific Implementation:**
 - `Cabin.swift` - SwiftData model with @Model macro
+- `AvailabilityHistory.swift` - SwiftData model for history tracking
 - `DefaultCabins.swift` - Pre-populated cabins from dnt_hytter.yaml
-- `CabinListView.swift` - Main list with weekend highlights
-- `CabinDetailView.swift` - Detail view with dates and booking
+- `CabinListView.swift` - Main list with weekend highlights and NEW badges
+- `CabinDetailView.swift` - Detail view with NEW weekends section
 - `SettingsView.swift` - In-app settings with cabin management
 - SwiftUI NavigationStack/List UI
-- SwiftData for persistent cabin storage
+- SwiftData for persistent cabin storage and history
 - Pull-to-refresh for manual checks
+- Smart notifications for new weekends/Saturdays
 
 **Modules:**
 
@@ -375,6 +377,16 @@ Pre-populated cabin data:
 - Checks if database is empty before populating
 - Automatically fetches cabin images in background
 - Cabins: Stallen, Skjennungsvolden, Fuglemyrhytta
+
+#### AvailabilityHistory.swift
+SwiftData model for tracking availability changes:
+- `@Model` for persistence
+- Properties: `cabinId, checkedAt, availableDates`
+- `HistoryService` helper class with:
+  - `getLatestHistory(for:context:)`: Fetches most recent check
+  - `saveHistory(cabinId:dates:context:)`: Saves new check result
+  - `cleanupOldHistory(for:context:keepLast:)`: Keeps last 30 entries per cabin
+- Enables diff detection for new weekend notifications
 
 #### CabinListView.swift
 Main application view:
@@ -419,12 +431,17 @@ iOS notification manager:
 **Features:**
 - 📱 Full-screen SwiftUI interface
 - 🏔 Weekend-priority display
-- 🔔 Native iOS notifications with permission handling
+- 🆕 NEW weekend detection with smart badges
+- 🔔 Smart notifications:
+  - "🆕 NEW FULL WEEKENDS!" for new Fri-Sun availability
+  - "🆕 NEW SATURDAYS!" for new Saturday-only availability
+  - Regular notifications for other new dates
+- 📊 History tracking with SwiftData
 - 🖼️ Cabin images with AsyncImage
 - ⚙️ In-app settings for cabin management
 - 🔄 Pull-to-refresh for manual checks
 - 💾 SwiftData persistence
-- 🎨 Native iOS design language
+- 🎨 Native iOS design language with mountain icon
 - 🔗 One-tap booking (opens Safari)
 - ✨ Empty state for new users
 - 🏠 Pre-populated with 3 default cabins from dnt_hytter.yaml
@@ -437,11 +454,11 @@ iOS notification manager:
 - Async/await API client instead of semaphore-based
 
 **Future Enhancements:**
-- Background refresh with BackgroundTasks framework
-- History tracking (diff detection for new dates)
-- Push notifications for new availability
-- Widget support for quick glance
+- Background refresh with BackgroundTasks framework (automatic hourly checks)
+- Widget support for quick glance at availability
 - Share extension for adding cabins from Safari
+- Dark mode optimization
+- Norwegian date formatting (Nov → nov)
 
 ## Configuration
 

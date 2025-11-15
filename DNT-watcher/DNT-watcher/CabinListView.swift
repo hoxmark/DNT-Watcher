@@ -108,28 +108,109 @@ struct CabinListView: View {
 
         for cabin in cabins where cabin.isEnabled {
             do {
+                // Fetch new availability
                 let response = try await apiClient.getAvailability(cabinId: cabin.cabinId)
-                let dates = analyzer.extractAvailableDates(from: response)
-                let weekends = analyzer.findAvailableWeekends(in: dates)
+                let newDates = analyzer.extractAvailableDates(from: response)
+                let newWeekends = analyzer.findAvailableWeekends(in: newDates)
 
-                // For now, we'll show all as new (later we'll implement history tracking)
-                let availability = CabinAvailability(
+                // Load previous history
+                let previousHistory = await MainActor.run {
+                    HistoryService.getLatestHistory(for: cabin.cabinId, context: modelContext)
+                }
+                let oldDates = previousHistory?.availableDates ?? []
+
+                // Calculate differences
+                let diff = analyzer.diffDates(new: newDates, old: oldDates)
+                let addedDates = diff.added
+
+                // Find new weekends and new Saturdays
+                let newWeekendsDetected = findNewWeekends(in: addedDates, analyzer: analyzer)
+                let newSaturdays = findNewSaturdays(in: addedDates, existingWeekends: newWeekendsDetected)
+
+                // Send notifications
+                await sendNotifications(
                     cabin: cabin,
-                    availableDates: dates,
-                    weekends: weekends,
-                    newDates: [],
-                    newWeekends: []
+                    newWeekends: newWeekendsDetected,
+                    newSaturdays: newSaturdays,
+                    totalNewDates: addedDates.count
                 )
 
+                // Create availability data
+                let availability = CabinAvailability(
+                    cabin: cabin,
+                    availableDates: newDates,
+                    weekends: newWeekends,
+                    newDates: addedDates,
+                    newWeekends: newWeekendsDetected
+                )
+
+                // Save to state and history
                 await MainActor.run {
                     availabilityData[cabin.id] = availability
                     cabin.lastChecked = Date()
+                    HistoryService.saveHistory(cabinId: cabin.cabinId, dates: newDates, context: modelContext)
                 }
 
             } catch {
                 print("Error fetching availability for \(cabin.name): \(error)")
             }
         }
+    }
+
+    private func findNewWeekends(in dates: [Date], analyzer: AvailabilityAnalyzer) -> [Weekend] {
+        return analyzer.findAvailableWeekends(in: dates)
+    }
+
+    private func findNewSaturdays(in dates: [Date], existingWeekends: [Weekend]) -> [Date] {
+        let calendar = Calendar.current
+        let weekendSaturdays = Set(existingWeekends.map { $0.saturday })
+
+        return dates.filter { date in
+            let weekday = calendar.component(.weekday, from: date)
+            let isSaturday = (weekday == 7) // Saturday
+            let isAlreadyInWeekend = weekendSaturdays.contains(calendar.startOfDay(for: date))
+            return isSaturday && !isAlreadyInWeekend
+        }
+    }
+
+    private func sendNotifications(cabin: Cabin, newWeekends: [Weekend], newSaturdays: [Date], totalNewDates: Int) async {
+        guard totalNewDates > 0 else { return }
+
+        let notificationManager = NotificationManager.shared
+
+        if !newWeekends.isEmpty {
+            // NEW FULL WEEKENDS
+            let weekendDates = newWeekends.map { formatWeekend($0) }.joined(separator: ", ")
+            notificationManager.sendNotification(
+                title: "\(cabin.name) - 🆕 NEW FULL WEEKENDS!",
+                body: "Available: \(weekendDates)"
+            )
+        } else if !newSaturdays.isEmpty {
+            // NEW SATURDAYS (but not full weekends)
+            let saturdayDates = newSaturdays.map { formatDate($0) }.joined(separator: ", ")
+            notificationManager.sendNotification(
+                title: "\(cabin.name) - 🆕 NEW SATURDAYS!",
+                body: "Available Saturdays: \(saturdayDates)"
+            )
+        } else if totalNewDates > 0 {
+            // NEW DATES (but not weekends or Saturdays)
+            notificationManager.sendNotification(
+                title: "\(cabin.name) - New Availability",
+                body: "\(totalNewDates) new date\(totalNewDates == 1 ? "" : "s") available"
+            )
+        }
+    }
+
+    private func formatWeekend(_ weekend: Weekend) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM"
+        return formatter.string(from: weekend.friday)
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM"
+        return formatter.string(from: date)
     }
 }
 
@@ -156,12 +237,30 @@ struct CabinRow: View {
                     .font(.headline)
 
                 if let availability = availability {
-                    HStack(spacing: 16) {
+                    HStack(spacing: 12) {
+                        // NEW weekends badge
+                        if !availability.newWeekends.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "sparkles")
+                                Text("NEW")
+                                    .fontWeight(.bold)
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.green)
+                            .clipShape(Capsule())
+                        }
+
+                        // Weekend count
                         if !availability.weekends.isEmpty {
                             Label("\(availability.weekends.count)", systemImage: "calendar.badge.checkmark")
                                 .font(.subheadline)
                                 .foregroundStyle(.green)
                         }
+
+                        // Total dates
                         Label("\(availability.availableDates.count)", systemImage: "calendar")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
