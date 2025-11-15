@@ -16,11 +16,31 @@ let iconSizes: [(size: CGFloat, scale: CGFloat, name: String)] = [
     (1024, 1, "Icon-1024")
 ]
 
-func generateIcon(size: CGFloat, scale: CGFloat) -> NSImage? {
-    let pixelSize = size * scale
-    let image = NSImage(size: NSSize(width: pixelSize, height: pixelSize))
+func generateIcon(size: CGFloat, scale: CGFloat) -> NSBitmapImageRep? {
+    let pixelSize = Int(size * scale)
 
-    image.lockFocus()
+    // Create bitmap directly with exact pixel dimensions
+    guard let bitmap = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: pixelSize,
+        pixelsHigh: pixelSize,
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bytesPerRow: pixelSize * 4,
+        bitsPerPixel: 32
+    ) else {
+        return nil
+    }
+
+    // Draw into the bitmap context
+    NSGraphicsContext.saveGraphicsState()
+    let context = NSGraphicsContext(bitmapImageRep: bitmap)
+    NSGraphicsContext.current = context
+
+    let rect = NSRect(x: 0, y: 0, width: pixelSize, height: pixelSize)
 
     // Background gradient (blue to cyan)
     let gradient = NSGradient(
@@ -29,33 +49,40 @@ func generateIcon(size: CGFloat, scale: CGFloat) -> NSImage? {
             NSColor(red: 0.3, green: 0.7, blue: 1.0, alpha: 1.0)
         ]
     )
-    gradient?.draw(in: NSRect(x: 0, y: 0, width: pixelSize, height: pixelSize), angle: 135)
+    gradient?.draw(in: rect, angle: 135)
 
     // Draw mountain symbol
-    let config = NSImage.SymbolConfiguration(pointSize: pixelSize * 0.6, weight: .bold)
+    let symbolSize = CGFloat(pixelSize) * 0.6
+    let config = NSImage.SymbolConfiguration(pointSize: symbolSize, weight: .bold)
+
     if let symbolImage = NSImage(systemSymbolName: "mountain.2.fill", accessibilityDescription: nil)?
         .withSymbolConfiguration(config) {
 
-        // Draw white mountain
+        // Tint white
+        symbolImage.lockFocus()
+        NSColor.white.set()
+        let symbolBounds = NSRect(origin: .zero, size: symbolImage.size)
+        symbolBounds.fill(using: .sourceAtop)
+        symbolImage.unlockFocus()
+
+        // Center the symbol
         let symbolRect = NSRect(
-            x: (pixelSize - symbolImage.size.width) / 2,
-            y: (pixelSize - symbolImage.size.height) / 2,
+            x: (CGFloat(pixelSize) - symbolImage.size.width) / 2,
+            y: (CGFloat(pixelSize) - symbolImage.size.height) / 2,
             width: symbolImage.size.width,
             height: symbolImage.size.height
         )
 
-        symbolImage.draw(in: symbolRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        symbolImage.draw(in: symbolRect)
     }
 
-    image.unlockFocus()
+    NSGraphicsContext.restoreGraphicsState()
 
-    return image
+    return bitmap
 }
 
-func saveIcon(image: NSImage, name: String, directory: URL) {
-    guard let tiffData = image.tiffRepresentation,
-          let bitmapImage = NSBitmapImageRep(data: tiffData),
-          let pngData = bitmapImage.representation(using: .png, properties: [:]) else {
+func saveIcon(bitmap: NSBitmapImageRep, name: String, directory: URL) {
+    guard let pngData = bitmap.representation(using: .png, properties: [:]) else {
         print("Failed to generate PNG for \(name)")
         return
     }
@@ -63,7 +90,7 @@ func saveIcon(image: NSImage, name: String, directory: URL) {
     let fileURL = directory.appendingPathComponent("\(name).png")
     do {
         try pngData.write(to: fileURL)
-        print("Generated: \(name).png")
+        print("Generated: \(name).png (\(bitmap.pixelsWide)x\(bitmap.pixelsHigh))")
     } catch {
         print("Failed to write \(name).png: \(error)")
     }
@@ -80,8 +107,8 @@ print("Generating app icons...")
 print("Output directory: \(iconSetPath.path)")
 
 for iconSpec in iconSizes {
-    if let icon = generateIcon(size: iconSpec.size, scale: iconSpec.scale) {
-        saveIcon(image: icon, name: iconSpec.name, directory: iconSetPath)
+    if let bitmap = generateIcon(size: iconSpec.size, scale: iconSpec.scale) {
+        saveIcon(bitmap: bitmap, name: iconSpec.name, directory: iconSetPath)
     }
 }
 
