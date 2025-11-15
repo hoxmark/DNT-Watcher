@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DNT Watcher is a **multi-layered cabin availability monitoring system** for DNT (Den Norske Turistforening) cabins. It combines a **Python UV Workspace** (for business logic and CLI) with a **native Swift menu bar app** (for macOS UI).
+DNT Watcher is a **multi-layered cabin availability monitoring system** for DNT (Den Norske Turistforening) cabins. It combines a **Python UV Workspace** (for business logic and CLI) with **native Swift applications** (for macOS and iOS UI).
 
 **Key Components:**
-1. **Swift Menu Bar App** - Native macOS status bar application (⭐ primary interface)
-2. **Python Core Package** - Shared business logic (API, analysis, config)
-3. **Python CLI Application** - Terminal interface for scheduled monitoring
-4. **Notification Package** - Cross-platform notification layer
+1. **Swift Menu Bar App** - Native macOS status bar application (⭐ primary macOS interface)
+2. **Swift iOS App** - Native iOS application (🚧 in development)
+3. **Python Core Package** - Shared business logic (API, analysis, config)
+4. **Python CLI Application** - Terminal interface for scheduled monitoring
+5. **Notification Package** - Cross-platform notification layer
 
 The system checks cabin availability via API, detects new available dates, highlights full weekend availability (Fri-Sun), tracks NEW weekends/Saturdays, and provides one-click booking links.
 
@@ -18,7 +19,8 @@ The system checks cabin availability via API, detects new available dates, highl
 
 This project follows a **Hybrid Swift + Python Architecture** with the **Weather Station Metaphor**:
 
-- **Swift Menu Bar App** = Dashboard display (native UI, weekend-first layout, clickable booking)
+- **Swift Menu Bar App (macOS)** = Desktop dashboard (status bar UI, weekend-first layout, clickable booking)
+- **Swift iOS App** = Mobile dashboard (full-screen SwiftUI, on-the-go monitoring)
 - **Python Core Package** = Measurement engine (API, analysis, weekend detection, history)
 - **Python CLI App** = Scheduled reporter (colorful terminal output, cron-friendly)
 - **Notification Layer** = Alarm bell (critical event notifications)
@@ -26,14 +28,15 @@ This project follows a **Hybrid Swift + Python Architecture** with the **Weather
 ### Key Principle: Best Tool for the Job
 
 **Swift handles the UI:**
-- Native macOS performance (20x faster startup)
-- Proper app bundle with Info.plist
+- Native performance (20x faster startup than Python)
+- Proper app bundles with Info.plist
 - Native notifications (UNUserNotificationCenter)
 - Weekend-priority UI with clickable booking links
 - Self-contained distribution
+- Platform-appropriate interfaces (menu bar for macOS, full-screen for iOS)
 
 **Python handles business logic:**
-- Available from both Swift app and CLI
+- Available from both Swift apps and CLI
 - Cross-platform core (can run on any platform)
 - Easy testing and rapid development
 - Rich ecosystem (requests, pyyaml)
@@ -42,7 +45,7 @@ This project follows a **Hybrid Swift + Python Architecture** with the **Weather
 
 ```
 DNT-Watcher/
-├── swift-toolbar/              # ⭐ Native Swift menu bar app (RECOMMENDED)
+├── swift-toolbar/              # ⭐ Native Swift menu bar app (macOS)
 │   ├── Package.swift           # Swift Package Manager config
 │   ├── Sources/DNTWatcher/
 │   │   ├── main.swift          # App entry point
@@ -61,6 +64,20 @@ DNT-Watcher/
 │   │   └── AppIcon.icns        # App icon (mountain symbol)
 │   ├── build-app.sh            # Build script (creates .app bundle)
 │   └── DNTWatcher.app          # Built application (gitignored)
+├── DNT-watcher/                # ✅ Native Swift iOS app (FUNCTIONAL)
+│   ├── DNT-watcher.xcodeproj   # Xcode project
+│   └── DNT-watcher/
+│       ├── DNT_watcherApp.swift      # App entry point with SwiftData
+│       ├── Cabin.swift               # SwiftData model
+│       ├── DefaultCabins.swift       # Pre-populated default cabins
+│       ├── CabinListView.swift       # Main list view
+│       ├── CabinDetailView.swift     # Detail view with dates
+│       ├── SettingsView.swift        # Settings & cabin management
+│       ├── DNTAPIClient.swift        # API client (async/await)
+│       ├── AvailabilityAnalyzer.swift # Weekend detection
+│       ├── NotificationManager.swift  # iOS notifications
+│       ├── ImageFetcher.swift        # Image scraping
+│       └── Assets.xcassets/          # App assets
 ├── packages/                   # Python workspace packages
 │   ├── core/                   # Core business logic (Python)
 │   │   ├── pyproject.toml
@@ -306,6 +323,125 @@ open DNTWatcher.app
 - ❌ No settings UI
 - ❌ No cabin images
 - ⚠️ Recommended to use Swift app instead
+
+### 6. iOS App (`DNT-watcher`) - ✅ FUNCTIONAL
+
+**Location:** `DNT-watcher/`
+
+**Purpose:** Native iOS application for on-the-go cabin availability monitoring.
+
+**Platform:** iOS 17.0+ (iPhone and iPad)
+
+**Status:** ✅ FUNCTIONAL - Core features implemented and working
+
+**Project Type:** Xcode project with SwiftUI + SwiftData
+
+**Bundle ID:** `hoxmark.DNT-watcher`
+
+**Architecture:**
+
+Successfully reused ~80% of the macOS Swift code with iOS-specific adaptations.
+
+**Shared Components (from macOS):**
+- `DNTAPIClient.swift` - API integration (adapted for async/await)
+- `AvailabilityAnalyzer.swift` - Weekend detection logic
+- `NotificationManager.swift` - iOS UNUserNotificationCenter with permission handling
+- `ImageFetcher.swift` - Cabin image scraping from Cloudinary
+- Core business logic
+
+**iOS-Specific Implementation:**
+- `Cabin.swift` - SwiftData model with @Model macro
+- `DefaultCabins.swift` - Pre-populated cabins from dnt_hytter.yaml
+- `CabinListView.swift` - Main list with weekend highlights
+- `CabinDetailView.swift` - Detail view with dates and booking
+- `SettingsView.swift` - In-app settings with cabin management
+- SwiftUI NavigationStack/List UI
+- SwiftData for persistent cabin storage
+- Pull-to-refresh for manual checks
+
+**Modules:**
+
+#### Cabin.swift (SwiftData Model)
+SwiftData model for cabin persistence:
+- `@Model` macro for persistence
+- Properties: `id, name, url, cabinDescription, isEnabled, imageURL, lastChecked`
+- Computed `cabinId`: Extracts ID from URL
+- `CabinAvailability` helper struct for runtime data
+
+#### DefaultCabins.swift
+Pre-populated cabin data:
+- Static list of default cabins from `dnt_hytter.yaml`
+- `populateIfNeeded(modelContext:)`: Adds defaults on first launch
+- Checks if database is empty before populating
+- Automatically fetches cabin images in background
+- Cabins: Stallen, Skjennungsvolden, Fuglemyrhytta
+
+#### CabinListView.swift
+Main application view:
+- List of enabled cabins with weekend indicators
+- Pull-to-refresh for manual checks
+- Automatic check on first load
+- Empty state with "Add Cabins" prompt
+- Navigation to detail views
+- Settings access via toolbar
+
+#### CabinDetailView.swift
+Cabin detail screen:
+- Large cabin image header
+- Available weekends section (green highlight)
+- All available dates grid
+- "Open Booking Page" button (opens Safari)
+- Weekend-priority layout matching macOS
+
+#### SettingsView.swift
+Settings and cabin management:
+- Add/Edit/Delete cabins
+- Cabin images with 50x50 thumbnails
+- Enable/disable toggles per cabin
+- URL validation (must be hyttebestilling.dnt.no)
+- Automatic image fetching on add
+- Manual image refresh option
+
+#### DNTAPIClient.swift (iOS Adaptation)
+Async/await API client:
+- Modern async/await instead of semaphores
+- Proper error handling with custom APIError enum
+- Same date range: today → November 1st next year
+- URLSession integration
+
+#### NotificationManager.swift (iOS Adaptation)
+iOS notification manager:
+- Singleton pattern
+- `requestPermission()` - async permission request
+- `sendNotification(title:body:)` - immediate delivery
+- UNUserNotificationCenter integration
+
+**Features:**
+- 📱 Full-screen SwiftUI interface
+- 🏔 Weekend-priority display
+- 🔔 Native iOS notifications with permission handling
+- 🖼️ Cabin images with AsyncImage
+- ⚙️ In-app settings for cabin management
+- 🔄 Pull-to-refresh for manual checks
+- 💾 SwiftData persistence
+- 🎨 Native iOS design language
+- 🔗 One-tap booking (opens Safari)
+- ✨ Empty state for new users
+- 🏠 Pre-populated with 3 default cabins from dnt_hytter.yaml
+
+**Differences from macOS:**
+- Full-screen UI instead of menu bar
+- SwiftData instead of UserDefaults
+- In-app settings instead of separate window
+- Pull-to-refresh instead of hourly timer
+- Async/await API client instead of semaphore-based
+
+**Future Enhancements:**
+- Background refresh with BackgroundTasks framework
+- History tracking (diff detection for new dates)
+- Push notifications for new availability
+- Widget support for quick glance
+- Share extension for adding cabins from Safari
 
 ## Configuration
 

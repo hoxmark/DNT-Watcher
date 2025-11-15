@@ -46,10 +46,12 @@ uv.lock
 
 # Swift
 .build/
-*.xcodeproj/
+swift-toolbar/*.xcodeproj/  # SPM generates this
 *.xcworkspace/
 DerivedData/
 *.app
+**/xcuserdata/  # User-specific Xcode settings
+**/*.xcuserstate  # User state files
 
 # Project specific
 history/
