@@ -1,42 +1,66 @@
 # 🏔 DNT Watcher
 
-> Multi-layered cabin availability monitoring system with native Swift menu bar app, CLI, and modular architecture!
+> Multi-layered cabin availability monitoring system with native Swift apps for macOS & iOS, CLI, and modular architecture!
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Swift 5.9+](https://img.shields.io/badge/swift-5.9+-orange.svg)](https://swift.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![UV Workspace](https://img.shields.io/badge/uv-workspace-orange.svg)](https://docs.astral.sh/uv/)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
+[![iOS](https://img.shields.io/badge/platform-iOS%2017%2B-blue.svg)](https://www.apple.com/ios/)
 
 ## ✨ Features
 
-- 🚀 **Native Swift Menu Bar App**: High-performance macOS status bar integration
+### macOS Menu Bar App
+- 🚀 **Native Swift Performance**: High-performance status bar integration
 - 🎯 **Weekend-First UI**: Prioritizes full Friday-Sunday weekends at the top
 - 🆕 **NEW Status Tracking**: Highlights newly available weekends/Saturdays
 - 🔗 **One-Click Booking**: Clickable cabin names open booking pages
 - 📊 **Smart Icons**: Visual status indicators (🏔🆕 = new weekends!)
+- 🔔 **Smart Notifications**: User-friendly permission flow
+- ⏰ **Automatic Hourly Checks**: Background refresh
+- ⚙️ **Settings Window**: Manage cabins with images (⌘,)
+
+### iOS App
+- 📱 **Native SwiftUI App**: Modern iOS experience
+- 🆕 **NEW Weekend Detection**: Highlights newly available weekends with badges
+- 🏔 **Cabin Images**: Beautiful thumbnails from DNT website
+- 🔔 **Background Refresh**: Automatic hourly checks (BGTaskScheduler)
+- 🇳🇴 **Norwegian Formatting**: Dates in Norwegian (e.g., "5 des")
+- ⚙️ **Rich Settings**: Notification preferences, check interval, clear history
+- 📳 **Haptic Feedback**: Tactile feedback for interactions
+- 🌓 **Dark Mode Optimized**: Beautiful in both light and dark modes
+
+### Cross-Platform
 - 🎨 **Beautiful CLI**: Colorful terminal output for scheduled checks
-- 🔔 **Smart Notifications**: User-friendly permission flow with welcome notification
 - 📈 **Change Detection**: Intelligent history-based diffing
 - 🏗️ **Modern Architecture**: UV Workspace + Swift Package Manager
 
 ## 🏗️ Architecture
 
-This project combines **Python UV Workspace** (for core business logic and CLI) with **native Swift** (for the menu bar app):
+This project combines **Python UV Workspace** (for core business logic and CLI) with **native Swift** (for macOS & iOS apps):
 
 ```
 DNT-Watcher/
-├── swift-toolbar/              # Native Swift menu bar app ⭐
+├── swift-toolbar/              # Native Swift menu bar app (macOS) ⭐
 │   ├── Package.swift
 │   ├── Sources/DNTWatcher/
 │   └── build-app.sh
+├── DNT-watcher/                # Native SwiftUI app (iOS) 📱
+│   ├── DNT-watcher.xcodeproj
+│   └── DNT-watcher/
+│       ├── CabinListView.swift
+│       ├── CabinDetailView.swift
+│       ├── SettingsView.swift
+│       ├── BackgroundTaskManager.swift
+│       └── Models/ (Cabin, AvailabilityHistory)
 ├── packages/                   # Python workspace packages
 │   ├── core/                   # Business logic (API, analysis, config)
 │   ├── notification/           # Cross-platform notification layer (CLI only)
 │   ├── cli/                    # Terminal application
 │   └── toolbar-app/            # Legacy Python toolbar (no notifications)
 ├── dnt_hytter.yaml            # Shared cabin configuration
-├── history/                    # Shared availability data
+├── history/                    # Shared availability data (macOS)
 └── tests/                      # Test suite
 ```
 
@@ -65,6 +89,35 @@ The native macOS menu bar application with weekend-priority UI:
 - 🔗 Clickable cabin names → open booking page
 - 📊 Smart status icons (🏔🆕, 🏔✨, 🏔✓, 🏔)
 
+#### 📱 iOS App
+
+**Location:** `DNT-watcher/`
+
+The native iOS application built with SwiftUI and SwiftData:
+- **CabinListView.swift**: Main list view with pull-to-refresh
+- **CabinDetailView.swift**: Detailed availability view with weekend sections
+- **SettingsView.swift**: In-app settings with cabin management
+- **BackgroundTaskManager.swift**: BGTaskScheduler integration
+- **NotificationManager.swift**: UNUserNotificationCenter integration
+- **Models/**: SwiftData models (Cabin, AvailabilityHistory)
+
+**Key Features:**
+- 🆕 NEW weekend detection with green badges
+- 🏔 Cabin images fetched from DNT website
+- 📳 Haptic feedback for interactions
+- 🇳🇴 Norwegian date formatting (e.g., "5 des")
+- 🔔 Customizable notifications with settings toggle
+- ⏰ Background refresh (1h, 2h, 4h, or 6h intervals)
+- 🌓 Optimized for dark mode
+- 📊 SwiftData persistence for cabins and history
+
+**Settings:**
+- Notification preferences (enable/disable)
+- Check interval customization
+- Clear history option
+- Add/Edit/Delete cabins with images
+- Enable/disable individual cabins
+
 #### 🐍 Python Packages
 
 **Core Package** (`dnt-core`)
@@ -87,7 +140,9 @@ The native macOS menu bar application with weekend-priority UI:
 ### Prerequisites
 
 - **macOS 13.0+** (for Swift menu bar app)
+- **iOS 17.0+** (for iPhone/iPad app)
 - **Swift 5.9+** (comes with Xcode Command Line Tools)
+- **Xcode 15.0+** (for iOS app development)
 - **Python 3.11+** (for CLI)
 - **[UV package manager](https://docs.astral.sh/uv/)** - Install: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
@@ -101,10 +156,14 @@ cd DNT-Watcher
 # Sync Python packages (for CLI)
 uv sync
 
-# Build Swift menu bar app
+# Build Swift menu bar app (macOS)
 cd swift-toolbar
 ./build-app.sh
 cd ..
+
+# Open iOS app in Xcode (iOS)
+open DNT-watcher/DNT-watcher.xcodeproj
+# Build and run on your iPhone/iPad or simulator
 ```
 
 ### Configuration
@@ -175,6 +234,44 @@ open swift-toolbar/DNTWatcher.app
 - 🏔✓ = Has weekends (no new ones)
 - 🏔⏳ = Checking availability...
 - 🏔 = No weekends available
+
+### iOS App
+
+Launch the native iOS app from Xcode or install on your iPhone/iPad:
+
+**Features:**
+- Pull-to-refresh to check availability
+- Tap cabin to see detailed weekend view
+- Tap gear icon for settings
+- Background checks every 1-6 hours (customizable)
+- Notifications for new weekends/dates
+- Haptic feedback on interactions
+
+**Main Views:**
+
+**Cabin List:**
+- Shows all enabled cabins with images
+- 🆕 NEW badge for cabins with new weekends
+- Weekend count and total dates shown
+- Pull down to refresh
+
+**Cabin Detail:**
+- 🆕 NEW FULL WEEKENDS section (top, green background)
+- 🏔 All Weekends section with Fri-Sun dates
+- 📅 All Available Dates in grid layout
+- Button to open booking page in Safari
+
+**Settings:**
+- Add/Edit/Delete cabins
+- Enable/disable individual cabins
+- Toggle notifications on/off
+- Customize check interval (1h, 2h, 4h, 6h)
+- Clear history option
+- Cabin images automatically fetched
+
+**Norwegian Formatting:**
+- Dates shown as "5 des", "20 nov", etc.
+- Weekend labels: "Fre - Søn"
 
 ### CLI Mode
 

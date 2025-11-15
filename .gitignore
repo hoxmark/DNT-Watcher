@@ -53,6 +53,11 @@ DerivedData/
 **/xcuserdata/  # User-specific Xcode settings
 **/*.xcuserstate  # User state files
 
+# iOS specific
+*.ipa
+*.dSYM.zip
+*.dSYM
+
 # Project specific
 history/
 documentation/
