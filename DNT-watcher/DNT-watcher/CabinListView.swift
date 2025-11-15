@@ -155,6 +155,9 @@ struct CabinListView: View {
                 print("Error fetching availability for \(cabin.name): \(error)")
             }
         }
+
+        // Schedule background refresh after completing checks
+        BackgroundTaskManager.shared.scheduleBackgroundRefresh()
     }
 
     private func findNewWeekends(in dates: [Date], analyzer: AvailabilityAnalyzer) -> [Weekend] {

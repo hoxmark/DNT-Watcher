@@ -67,9 +67,12 @@ DNT-Watcher/
 ├── DNT-watcher/                # ✅ Native Swift iOS app (FUNCTIONAL)
 │   ├── DNT-watcher.xcodeproj   # Xcode project
 │   └── DNT-watcher/
+│       ├── Info.plist                # App config with background tasks
 │       ├── DNT_watcherApp.swift      # App entry point with SwiftData
 │       ├── Cabin.swift               # SwiftData model
+│       ├── AvailabilityHistory.swift # History tracking model
 │       ├── DefaultCabins.swift       # Pre-populated default cabins
+│       ├── BackgroundTaskManager.swift # Background refresh
 │       ├── CabinListView.swift       # Main list view
 │       ├── CabinDetailView.swift     # Detail view with dates
 │       ├── SettingsView.swift        # Settings & cabin management
@@ -353,12 +356,14 @@ Successfully reused ~80% of the macOS Swift code with iOS-specific adaptations.
 - `Cabin.swift` - SwiftData model with @Model macro
 - `AvailabilityHistory.swift` - SwiftData model for history tracking
 - `DefaultCabins.swift` - Pre-populated cabins from dnt_hytter.yaml
+- `BackgroundTaskManager.swift` - Background refresh with BGTaskScheduler
 - `CabinListView.swift` - Main list with weekend highlights and NEW badges
 - `CabinDetailView.swift` - Detail view with NEW weekends section
 - `SettingsView.swift` - In-app settings with cabin management
 - SwiftUI NavigationStack/List UI
 - SwiftData for persistent cabin storage and history
 - Pull-to-refresh for manual checks
+- Background refresh (hourly automatic checks)
 - Smart notifications for new weekends/Saturdays
 
 **Modules:**
@@ -387,6 +392,23 @@ SwiftData model for tracking availability changes:
   - `saveHistory(cabinId:dates:context:)`: Saves new check result
   - `cleanupOldHistory(for:context:keepLast:)`: Keeps last 30 entries per cabin
 - Enables diff detection for new weekend notifications
+
+#### BackgroundTaskManager.swift
+Background refresh using BGTaskScheduler:
+- Singleton pattern
+- Task identifier: `io.hoxmark.DNTWatcher.refresh`
+- `registerBackgroundTasks()`: Registers handler on app launch
+- `scheduleBackgroundRefresh()`: Schedules next refresh (~1 hour)
+- `performBackgroundCheck()`: Runs full availability check in background
+- Features:
+  - Checks all enabled cabins automatically
+  - Sends notifications for new weekends/Saturdays
+  - Updates history independently
+  - Reschedules itself after each run
+  - Works even when app is closed
+- Info.plist configuration:
+  - `BGTaskSchedulerPermittedIdentifiers`
+  - `UIBackgroundModes: processing`
 
 #### CabinListView.swift
 Main application view:
@@ -437,9 +459,14 @@ iOS notification manager:
   - "🆕 NEW SATURDAYS!" for new Saturday-only availability
   - Regular notifications for other new dates
 - 📊 History tracking with SwiftData
+- 🔄 Background refresh:
+  - Automatic hourly checks using BGTaskScheduler
+  - Runs even when app is closed
+  - Sends notifications for new availability
+  - Self-rescheduling background tasks
 - 🖼️ Cabin images with AsyncImage
 - ⚙️ In-app settings for cabin management
-- 🔄 Pull-to-refresh for manual checks
+- 🔃 Pull-to-refresh for manual checks
 - 💾 SwiftData persistence
 - 🎨 Native iOS design language with mountain icon
 - 🔗 One-tap booking (opens Safari)
@@ -450,15 +477,23 @@ iOS notification manager:
 - Full-screen UI instead of menu bar
 - SwiftData instead of UserDefaults
 - In-app settings instead of separate window
-- Pull-to-refresh instead of hourly timer
+- Background refresh (BGTaskScheduler) instead of always-running timer
 - Async/await API client instead of semaphore-based
 
+**Similar to macOS:**
+- ✅ History tracking with diff detection
+- ✅ Smart notifications for new weekends/Saturdays
+- ✅ Automatic hourly checks (background tasks)
+- ✅ Weekend-first UI design
+- ✅ Cabin images
+- ✅ One-click booking
+
 **Future Enhancements:**
-- Background refresh with BackgroundTasks framework (automatic hourly checks)
 - Widget support for quick glance at availability
 - Share extension for adding cabins from Safari
 - Dark mode optimization
 - Norwegian date formatting (Nov → nov)
+- iPad optimized layout
 
 ## Configuration
 

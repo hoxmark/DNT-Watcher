@@ -29,6 +29,9 @@ struct DNT_watcherApp: App {
         Task {
             _ = await NotificationManager.shared.requestPermission()
         }
+
+        // Register background tasks
+        BackgroundTaskManager.shared.registerBackgroundTasks()
     }
 
     var body: some Scene {
