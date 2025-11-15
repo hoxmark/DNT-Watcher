@@ -191,6 +191,7 @@ struct WeekendRow: View {
                 .padding(.vertical, 4)
                 .background(.green)
                 .clipShape(Capsule())
+                .fixedSize()
             } else {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)

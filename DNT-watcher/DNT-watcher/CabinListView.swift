@@ -251,6 +251,7 @@ struct CabinRow: View {
                             .padding(.vertical, 4)
                             .background(.green)
                             .clipShape(Capsule())
+                            .fixedSize()
                         }
 
                         // Weekend count
